@@ -1,4 +1,4 @@
-package com.store.backend.user;
+package com.store.backend.user.customs;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -6,7 +6,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import com.store.backend.user.enums.UserRole;
+import com.store.backend.user.UserEntity;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -14,23 +14,21 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 public class CustomUserDetails implements UserDetails {
-  private String username;
-  private String password;
-  private UserRole role;
+  private UserEntity user;
 
   @Override
   public Collection<? extends GrantedAuthority> getAuthorities() {
-    return Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role.name()));
+    return Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()));
   }
 
   @Override
   public String getUsername() {
-    return username;
+    return user.getUsername();
   }
 
   @Override
   public String getPassword() {
-    return password;
+    return user.getPassword();
   }
 
   @Override
