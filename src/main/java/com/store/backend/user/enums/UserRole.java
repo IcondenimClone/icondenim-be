@@ -1,4 +1,4 @@
-package com.store.backend.user;
+package com.store.backend.user.enums;
 
 public enum UserRole {
   USER,
