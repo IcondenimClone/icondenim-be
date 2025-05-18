@@ -1,12 +1,11 @@
 package com.store.backend.user;
 
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import com.store.backend.exception.AlreadyExistsException;
 import com.store.backend.user.enums.UserRole;
+import com.store.backend.user.implement.ImplementUserService;
 import com.store.backend.user.request.SignupRequest;
 import com.store.backend.user.response.UserResponse;
 import jakarta.transaction.Transactional;
@@ -15,7 +14,7 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 @Transactional
-public class UserService implements IUserService, UserDetailsService {
+public class UserService implements ImplementUserService {
 
   private final UserRepository userRepository;
   private final PasswordEncoder passwordEncoder;
@@ -46,10 +45,18 @@ public class UserService implements IUserService, UserDetailsService {
         .build();
   }
 
-  @Override
-  public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+  public UserResponse getUserByUsername(String username) {
     UserEntity user = userRepository.findByUsername(username)
-        .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
-    return new CustomUserDetails(user.getUsername(), user.getPassword(), user.getRole());
+        .orElseThrow(() -> new UsernameNotFoundException("Không tìm thấy người dùng có username: " + username));
+
+    return UserResponse.builder()
+        .id(user.getId())
+        .username(user.getUsername())
+        .email(user.getEmail())
+        .firstName(user.getFirstName())
+        .lastName(user.getLastName())
+        .role(user.getRole())
+        .createdAt(user.getCreatedAt())
+        .build();
   }
 }

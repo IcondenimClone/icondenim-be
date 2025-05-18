@@ -4,11 +4,11 @@ import java.util.HashMap;
 import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import com.store.backend.exception.AlreadyExistsException;
-import com.store.backend.exception.BadCredentialsException;
 import com.store.backend.exception.NotFoundException;
 
 @RestControllerAdvice
@@ -28,7 +28,7 @@ public class GlobalExceptionHandler {
 
   @ExceptionHandler(BadCredentialsException.class)
   public ResponseEntity<ApiResponse> handleBadCredentialsException(BadCredentialsException ex) {
-    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ApiResponse(ex.getMessage(), null));
+    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ApiResponse("Tài khoản hoặc mật khẩu không đúng", null));
   }
 
   @ExceptionHandler(NotFoundException.class)
