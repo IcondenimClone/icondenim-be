@@ -1,7 +1,13 @@
 package com.store.backend.user;
 
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.store.backend.exception.AlreadyExistsException;
+import com.store.backend.user.enums.UserRole;
 import com.store.backend.user.request.SignupRequest;
 import com.store.backend.user.response.UserResponse;
 
@@ -11,22 +17,23 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 @Transactional
-public class UserService implements IUserService {
+public class UserService implements IUserService, UserDetailsService {
 
   private final UserRepository userRepository;
+  private final PasswordEncoder passwordEncoder;
 
   @Override
   public UserResponse signup(SignupRequest request) {
     if (userRepository.existsByEmail(request.getEmail())) {
-      throw new IllegalArgumentException("Email đã tồn tại");
+      throw new AlreadyExistsException("Email đã tồn tại");
     }
 
     if (userRepository.existsByUsername(request.getUsername())) {
-      throw new IllegalArgumentException("Username đã tồn tại");
+      throw new AlreadyExistsException("Username đã tồn tại");
     }
 
     UserEntity user = UserEntity.builder().username(request.getUsername()).email(request.getEmail())
-        .password(request.getPassword()).role(UserRole.USER).build();
+        .password(passwordEncoder.encode(request.getPassword())).role(UserRole.USER).build();
 
     UserEntity savedUser = userRepository.save(user);
 
@@ -38,7 +45,13 @@ public class UserService implements IUserService {
         .lastName(savedUser.getLastName())
         .role(savedUser.getRole())
         .createdAt(savedUser.getCreatedAt())
-        .updatedAt(savedUser.getUpdatedAt())
         .build();
+  }
+
+  @Override
+  public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+    UserEntity user = userRepository.findByUsername(username)
+        .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
+    return new CustomUserDetails(user.getUsername(), user.getPassword(), user.getRole());
   }
 }

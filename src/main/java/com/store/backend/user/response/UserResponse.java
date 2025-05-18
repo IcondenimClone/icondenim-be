@@ -2,7 +2,7 @@ package com.store.backend.user.response;
 
 import java.time.LocalDateTime;
 
-import com.store.backend.user.UserRole;
+import com.store.backend.user.enums.UserRole;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -21,5 +21,4 @@ public class UserResponse {
   private String firstName;
   private String lastName;
   private LocalDateTime createdAt;
-  private LocalDateTime updatedAt;
 }
