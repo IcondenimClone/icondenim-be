@@ -5,12 +5,10 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
 import com.store.backend.exception.AlreadyExistsException;
 import com.store.backend.user.enums.UserRole;
 import com.store.backend.user.request.SignupRequest;
 import com.store.backend.user.response.UserResponse;
-
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
