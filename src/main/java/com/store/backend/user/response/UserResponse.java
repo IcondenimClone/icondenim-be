@@ -1,9 +1,7 @@
 package com.store.backend.user.response;
 
 import java.time.LocalDateTime;
-
 import com.store.backend.user.enums.UserRole;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

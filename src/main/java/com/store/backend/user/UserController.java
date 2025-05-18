@@ -1,13 +1,11 @@
 package com.store.backend.user;
 
 import org.springframework.web.bind.annotation.RestController;
-
 import com.store.backend.common.ApiResponse;
 import com.store.backend.user.request.SignupRequest;
 import com.store.backend.user.response.UserResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
