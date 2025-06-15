@@ -9,7 +9,6 @@ import com.store.backend.user.request.SignupRequest;
 import com.store.backend.user.response.UserResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import lombok.experimental.FieldDefaults;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
