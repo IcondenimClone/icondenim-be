@@ -7,91 +7,73 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
+
+import com.store.backend.user.UserEntity;
+import com.store.backend.user.UserRepository;
 import com.store.backend.user.customs.CustomUserDetailsService;
 import java.io.IOException;
-import java.util.Arrays;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
-
-  private static final Logger logger = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
-
   private final JwtService jwtService;
   private final CustomUserDetailsService customUserDetailsService;
+  private final UserRepository userRepository;
 
   @Value("${jwt.token.cookie-name:accessToken}")
   private String tokenCookieName;
 
   @Override
-  protected void doFilterInternal(HttpServletRequest request,
-      HttpServletResponse response,
-      FilterChain filterChain) throws ServletException, IOException {
-    if (SecurityContextHolder.getContext().getAuthentication() != null) {
-      filterChain.doFilter(request, response);
-      return;
-    }
+  protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response,
+      @NonNull FilterChain filterChain) throws ServletException, IOException {
 
-    String token = extractToken(request);
-    if (!StringUtils.hasText(token)) {
-      logger.debug("No JWT token found in request");
+    String token = extractTokenFromCookie(request);
+    if (token == null) {
       filterChain.doFilter(request, response);
       return;
     }
 
     try {
-      jwtService.validateToken(token);
-      String username = jwtService.extractUsername(token);
-
-      UserDetails userDetails = customUserDetailsService.loadUserByUsername(username);
-      UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-          userDetails, null, userDetails.getAuthorities());
-      authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-
-      SecurityContext context = SecurityContextHolder.createEmptyContext();
-      context.setAuthentication(authToken);
-      SecurityContextHolder.setContext(context);
-
-      logger.debug("Successfully authenticated user: {}", username);
+      String userId = jwtService.extractUserID(token);
+      if (userId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+        UserEntity user = userRepository.findById(userId).orElse(null);
+        if (user != null && jwtService.isTokenValid(token, user)) {
+          UserDetails userDetails = customUserDetailsService.loadUserByUsername(user.getUsername());
+          UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails, null,
+              userDetails.getAuthorities());
+          authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+          SecurityContextHolder.getContext().setAuthentication(authToken);
+        }
+      }
     } catch (JwtException e) {
-      logger.warn("Invalid JWT token: {}", e.getMessage());
+      log.warn("Invalid JWT token: {}", e.getMessage());
     } catch (Exception e) {
-      logger.error("Error processing JWT authentication: {}", e.getMessage(), e);
+      log.error("Error processing JWT authentication: {}", e.getMessage(), e);
     }
 
     filterChain.doFilter(request, response);
   }
 
-  private String extractToken(HttpServletRequest request) {
-    String token = extractTokenFromCookie(request);
-    if (StringUtils.hasText(token)) {
-      return token;
+  private String extractTokenFromCookie(HttpServletRequest request) {
+    if (request.getCookies() != null) {
+      for (Cookie cookie : request.getCookies()) {
+        if (tokenCookieName.equals(cookie.getName())) {
+          return cookie.getValue();
+        }
+      }
     }
     return null;
-  }
-
-
-  private String extractTokenFromCookie(HttpServletRequest request) {
-    if (request.getCookies() == null) {
-      return null;
-    }
-
-    return Arrays.stream(request.getCookies())
-        .filter(cookie -> tokenCookieName.equals(cookie.getName()))
-        .map(Cookie::getValue)
-        .filter(StringUtils::hasText)
-        .findFirst()
-        .orElse(null);
   }
 }

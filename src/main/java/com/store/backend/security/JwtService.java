@@ -2,22 +2,28 @@ package com.store.backend.security;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+
+import com.store.backend.user.UserEntity;
+import com.store.backend.user.enums.UserRole;
+
 import io.jsonwebtoken.security.Keys;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
-import java.nio.charset.StandardCharsets;
+import io.jsonwebtoken.io.Decoders;
+
 import javax.crypto.SecretKey;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Base64;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.function.Function;
 
 @Service
+@RequiredArgsConstructor
+@Slf4j
 public class JwtService {
-
   @Value("${jwt.secret}")
   private String secret;
 
@@ -28,52 +34,57 @@ public class JwtService {
   private long refreshTokenExpirationDays;
 
   private SecretKey getSigningKey() {
-    return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+    byte[] keyBytes = Decoders.BASE64.decode(Base64.getEncoder().encodeToString(secret.getBytes()));
+    return Keys.hmacShaKeyFor(keyBytes);
   }
 
-  public String generateAccessToken(String username, String role) {
-    Map<String, Object> claims = new HashMap<>();
-    claims.put("role", role);
-    return generateToken(username, claims, accessTokenExpirationMinutes, ChronoUnit.MINUTES);
+  public String generateAccessToken(String userId, UserRole role) {
+    return generateToken(userId, role, accessTokenExpirationMinutes, ChronoUnit.MINUTES);
   }
 
-  public String generateRefreshToken(String username) {
-    return generateToken(username, Map.of(), refreshTokenExpirationDays, ChronoUnit.DAYS);
+  public String generateRefreshToken(String userId, UserRole role) {
+    return generateToken(userId, role, refreshTokenExpirationDays, ChronoUnit.DAYS);
   }
 
-  private String generateToken(String subject, Map<String, Object> claims, long expiration, ChronoUnit unit) {
+  private String generateToken(String userId, UserRole role, long expiration, ChronoUnit unit) {
     Instant now = Instant.now();
     Instant expirationTime = now.plus(expiration, unit);
 
     return Jwts.builder()
-        .subject(subject)
-        .claims(claims)
+        .subject(userId)
+        .claim("role", role.name())
         .issuedAt(Date.from(now))
         .expiration(Date.from(expirationTime))
         .signWith(getSigningKey(), Jwts.SIG.HS256)
         .compact();
   }
 
-  public boolean validateToken(String token) {
-    try {
-      Jwts.parser().verifyWith(getSigningKey()).build().parseSignedClaims(token);
-      return true;
-    } catch (JwtException e) {
-      return false;
-    }
+  public boolean isTokenValid(String token, UserEntity user) {
+    final String userId = extractUserID(token);
+    final UserRole tokenRole = extractRole(token);
+    return (userId.equals(user.getId())) && (tokenRole.equals(user.getRole())) && !isTokenExpired(token);
   }
 
-  public String extractUsername(String token) {
+  public String extractUserID(String token) {
     return extractClaim(token, Claims::getSubject);
   }
 
-  public String extractRole(String token) {
-    return extractClaim(token, claims -> claims.get("role", String.class));
+  public UserRole extractRole(String token) {
+    String roleName = extractClaim(token, claims -> claims.get("role", String.class));
+    return UserRole.valueOf(roleName);
   }
 
-  private <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
+  public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
     Claims claims = extractAllClaims(token);
     return claimsResolver.apply(claims);
+  }
+
+  private boolean isTokenExpired(String token) {
+    return extractExpiration(token).before(new Date());
+  }
+
+  private Date extractExpiration(String token) {
+    return extractClaim(token, Claims::getExpiration);
   }
 
   private Claims extractAllClaims(String token) {

@@ -1,25 +1,34 @@
 package com.store.backend.user.implement;
 
+import java.util.Optional;
+
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import com.store.backend.exception.AlreadyExistsException;
+import com.store.backend.exception.NotFoundException;
 import com.store.backend.user.UserEntity;
 import com.store.backend.user.UserRepository;
 import com.store.backend.user.UserService;
 import com.store.backend.user.enums.UserRole;
+import com.store.backend.user.request.SigninRequest;
 import com.store.backend.user.request.SignupRequest;
 import com.store.backend.user.response.UserResponse;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
 @Transactional
+@Slf4j
 public class UserServiceImpl implements UserService {
-
   private final UserRepository userRepository;
   private final PasswordEncoder passwordEncoder;
+  private final AuthenticationManager authenticationManager;
 
   @Override
   public UserResponse signup(SignupRequest request) {
@@ -32,6 +41,7 @@ public class UserServiceImpl implements UserService {
     }
 
     UserEntity user = UserEntity.builder().username(request.getUsername()).email(request.getEmail())
+        .firstName(request.getFirstName()).lastName(request.getLastName())
         .password(passwordEncoder.encode(request.getPassword())).role(UserRole.USER).build();
 
     UserEntity savedUser = userRepository.save(user);
@@ -39,8 +49,18 @@ public class UserServiceImpl implements UserService {
     return toUserResponse(savedUser);
   }
 
+  @Override
+  public UserResponse signin(SigninRequest request) {
+    Authentication authentication = authenticationManager
+        .authenticate(new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
+    UserEntity user = Optional.ofNullable(userRepository.findByUsername(authentication.getName()))
+        .orElseThrow(() -> new NotFoundException("Không tìm thấy người dùng"));
+    return toUserResponse(user);
+  }
+
+  @Override
   public UserResponse getUserByUsername(String username) {
-    UserEntity user = userRepository.findByUsername(username)
+    UserEntity user = Optional.ofNullable(userRepository.findByUsername(username))
         .orElseThrow(() -> new UsernameNotFoundException("Không tìm thấy người dùng có username: " + username));
 
     return toUserResponse(user);
