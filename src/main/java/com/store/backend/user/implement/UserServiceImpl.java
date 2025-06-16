@@ -56,17 +56,4 @@ public class UserServiceImpl implements UserService {
   public UserEntity getUserById(String id) {
     return userRepository.findById(id).orElseThrow(() -> new NotFoundException("Không tìm thấy người dùng"));
   }
-
-  @Override
-  public AuthResponse convertToAuthResponse(UserEntity user) {
-    return AuthResponse.builder()
-        .id(user.getId())
-        .username(user.getUsername())
-        .email(user.getEmail())
-        .firstName(user.getFirstName())
-        .lastName(user.getLastName())
-        .role(user.getRole())
-        .createdAt(user.getCreatedAt())
-        .build();
-  }
 }

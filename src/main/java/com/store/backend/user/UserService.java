@@ -10,6 +10,4 @@ public interface UserService {
   UserEntity signin(SigninRequest request);
 
   UserEntity getUserById(String id);
-
-  AuthResponse convertToAuthResponse(UserEntity user);
 }
