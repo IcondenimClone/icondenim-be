@@ -6,8 +6,8 @@ import com.store.backend.security.JwtService;
 import com.store.backend.user.customs.CustomUserDetails;
 import com.store.backend.user.enums.UserRole;
 import com.store.backend.user.mapper.UserMapper;
-import com.store.backend.user.request.SigninRequest;
-import com.store.backend.user.request.SignupRequest;
+import com.store.backend.user.request.SignInRequest;
+import com.store.backend.user.request.SignUpRequest;
 import com.store.backend.user.response.AuthResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -43,9 +43,9 @@ public class UserController {
   private String refreshTokenName;
 
   @PostMapping("/signup")
-  public ResponseEntity<ApiResponse> signup(@Valid @RequestBody SignupRequest signupRequest,
+  public ResponseEntity<ApiResponse> signup(@Valid @RequestBody SignUpRequest signupRequest,
       HttpServletResponse response) {
-    UserEntity user = userService.signup(signupRequest);
+    UserEntity user = userService.signUp(signupRequest);
     String userId = user.getId();
     UserRole role = user.getRole();
 
@@ -60,9 +60,9 @@ public class UserController {
   }
 
   @PostMapping("/signin")
-  public ResponseEntity<ApiResponse> signin(@Valid @RequestBody SigninRequest signinRequest,
+  public ResponseEntity<ApiResponse> signin(@Valid @RequestBody SignInRequest signinRequest,
       HttpServletResponse response) {
-    UserEntity user = userService.signin(signinRequest);
+    UserEntity user = userService.signIn(signinRequest);
     String userId = user.getId();
     UserRole role = user.getRole();
 
@@ -77,7 +77,7 @@ public class UserController {
   }
 
   @PostMapping("/signout")
-  public ResponseEntity<ApiResponse> signout(@AuthenticationPrincipal UserDetails userDetails,
+  public ResponseEntity<ApiResponse> signOut(@AuthenticationPrincipal UserDetails userDetails,
       HttpServletResponse response) {
     if (userDetails == null) {
       return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ApiResponse("Bạn chưa đăng nhập", null));

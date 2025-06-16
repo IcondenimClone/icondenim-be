@@ -1,13 +1,12 @@
 package com.store.backend.user;
 
-import com.store.backend.user.request.SigninRequest;
-import com.store.backend.user.request.SignupRequest;
-import com.store.backend.user.response.AuthResponse;
+import com.store.backend.user.request.SignInRequest;
+import com.store.backend.user.request.SignUpRequest;
 
 public interface UserService {
-  UserEntity signup(SignupRequest request);
+  UserEntity signUp(SignUpRequest request);
 
-  UserEntity signin(SigninRequest request);
+  UserEntity signIn(SignInRequest request);
 
   UserEntity getUserById(String id);
 }

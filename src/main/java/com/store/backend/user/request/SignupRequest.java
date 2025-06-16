@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class SignupRequest {
+public class SignUpRequest {
   @NotBlank(message = "Yêu cầu nhập username")
   @Size(min = 3, max = 50, message = "Username có độ dài từ 3 đến 50 ký tự")
   private String username;
