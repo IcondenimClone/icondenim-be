@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title th:text="${subject}">Tiêu đề Email</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f4f4f4;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      background-color: #ffffff;
+      padding: 20px;
+      border-radius: 8px;
+    }
+
+    h2 {
+      color: #333;
+    }
+
+    .noreply {
+      color: #777;
+    }
+
+    .otp-container {
+      text-align: center;
+    }
+
+    .otp-container strong {
+      font-size: 18px;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Icondenim</h2>
+    <h3 th:text="${subject}">Tiêu đề</h3>
+    <p>Đây là mã OTP của bạn, nó sẽ hết hạn sau 3 phút: <p class="otp-container"><strong th:text="${otp}">OTP</strong></p></p>
+    <p class="noreply">Email này được gửi từ Icondenim. Vui lòng không trả lời trực tiếp.</p>
+  </div>
+</body>
+</html>
