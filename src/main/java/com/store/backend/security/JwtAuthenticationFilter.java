@@ -31,21 +31,21 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
   private final CustomUserDetailsService customUserDetailsService;
   private final UserRepository userRepository;
 
-  @Value("${jwt.token.cookie-name:accessToken}")
-  private String tokenCookieName;
+  @Value("${jwt.access-token-name}")
+  private String accessTokenName;
 
   @Override
   protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response,
       @NonNull FilterChain filterChain) throws ServletException, IOException {
 
-    String token = extractTokenFromCookie(request);
+    String token = extractAccessTokenFromCookie(request);
     if (token == null) {
       filterChain.doFilter(request, response);
       return;
     }
 
     try {
-      String userId = jwtService.extractUserID(token);
+      String userId = jwtService.extractUserId(token);
       if (userId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
         UserEntity user = userRepository.findById(userId).orElse(null);
         if (user != null && jwtService.isTokenValid(token, user)) {
@@ -65,10 +65,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     filterChain.doFilter(request, response);
   }
 
-  private String extractTokenFromCookie(HttpServletRequest request) {
+  private String extractAccessTokenFromCookie(HttpServletRequest request) {
     if (request.getCookies() != null) {
       for (Cookie cookie : request.getCookies()) {
-        if (tokenCookieName.equals(cookie.getName())) {
+        if (accessTokenName.equals(cookie.getName())) {
           return cookie.getValue();
         }
       }
