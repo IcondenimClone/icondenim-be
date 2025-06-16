@@ -60,12 +60,12 @@ public class JwtService {
   }
 
   public boolean isTokenValid(String token, UserEntity user) {
-    final String userId = extractUserID(token);
+    final String userId = extractUserId(token);
     final UserRole tokenRole = extractRole(token);
     return (userId.equals(user.getId())) && (tokenRole.equals(user.getRole())) && !isTokenExpired(token);
   }
 
-  public String extractUserID(String token) {
+  public String extractUserId(String token) {
     return extractClaim(token, Claims::getSubject);
   }
 

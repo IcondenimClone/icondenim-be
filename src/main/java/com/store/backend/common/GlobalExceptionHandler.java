@@ -39,6 +39,6 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(Exception.class)
   public ResponseEntity<ApiResponse> handleGenericException(Exception ex) {
     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-        .body(new ApiResponse("Lỗi máy chủ: " + ex.getMessage(), null));
+        .body(new ApiResponse(ex.getMessage(), null));
   }
 }
