@@ -5,6 +5,7 @@ import com.store.backend.common.ApiResponse;
 import com.store.backend.security.JwtService;
 import com.store.backend.user.customs.CustomUserDetails;
 import com.store.backend.user.enums.UserRole;
+import com.store.backend.user.mapper.UserMapper;
 import com.store.backend.user.request.SigninRequest;
 import com.store.backend.user.request.SignupRequest;
 import com.store.backend.user.response.AuthResponse;
@@ -30,6 +31,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 public class UserController {
   private final UserService userService;
   private final JwtService jwtService;
+  private final UserMapper userMapper;
 
   @Value("${server.servlet.context-path}")
   private String apiPrefix;
@@ -53,7 +55,7 @@ public class UserController {
     setTokenCookie(response, accessTokenName, accessToken, "/", 15 * 60);
     setTokenCookie(response, refreshTokenName, refreshToken, apiPrefix + "/auth/refresh", 7 * 24 * 60 * 60);
 
-    AuthResponse convertedUser = userService.convertToAuthResponse(user);
+    AuthResponse convertedUser = userMapper.entityToAuthResponse(user);
     return ResponseEntity.status(HttpStatus.CREATED).body(new ApiResponse("Đăng ký thành công", convertedUser));
   }
 
@@ -70,7 +72,7 @@ public class UserController {
     setTokenCookie(response, accessTokenName, accessToken, "/", 15 * 60);
     setTokenCookie(response, refreshTokenName, refreshToken, apiPrefix + "/auth/refresh", 7 * 24 * 60 * 60);
 
-    AuthResponse convertedUser = userService.convertToAuthResponse(user);
+    AuthResponse convertedUser = userMapper.entityToAuthResponse(user);
     return ResponseEntity.ok(new ApiResponse("Đăng nhập thành công", convertedUser));
   }
 
@@ -94,7 +96,8 @@ public class UserController {
     }
 
     UserEntity user = userService.getUserById(userDetails.getId());
-    AuthResponse convertedUser = userService.convertToAuthResponse(user);
+    AuthResponse convertedUser = userMapper.entityToAuthResponse(user);
+
     return ResponseEntity.status(HttpStatus.OK)
         .body(new ApiResponse("Lấy thông tin người dùng thành công", convertedUser));
   }
@@ -104,7 +107,7 @@ public class UserController {
     String token = extractRefreshTokenFromCookie(request);
     if (token == null) {
       return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-          .body(new ApiResponse("Không tìm thấy thông tin refresh token", null));
+          .body(new ApiResponse("Không tìm thấy refresh token", null));
     }
 
     String currentUserId = jwtService.extractUserId(token);
