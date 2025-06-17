@@ -11,6 +11,7 @@ import com.store.backend.user.request.ForgotPasswordRequest;
 import com.store.backend.user.request.ResetPasswordRequest;
 import com.store.backend.user.request.SignInRequest;
 import com.store.backend.user.request.SignUpRequest;
+import com.store.backend.user.request.UpdateInfoRequest;
 import com.store.backend.user.request.VerifyForgotPasswordRequest;
 import com.store.backend.user.request.VerifySignUpRequest;
 import com.store.backend.user.response.AuthResponse;
@@ -189,7 +190,7 @@ public class UserController {
     if (userDetails == null) {
       return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ApiResponse("Bạn chưa đăng nhập", null));
     }
-    
+
     UserEntity user = userService.changePassword(userDetails, request);
     String userId = user.getId();
     UserRole role = user.getRole();
@@ -203,6 +204,19 @@ public class UserController {
     AuthResponse convertedUser = userMapper.entityToAuthResponse(user);
     Map<String, Object> data = createAuthResponse(convertedUser);
     return ResponseEntity.ok(new ApiResponse("Cập nhật mật khẩu thành công", data));
+  }
+
+  @PutMapping("/update-info")
+  public ResponseEntity<ApiResponse> updateInfo(@AuthenticationPrincipal CustomUserDetails userDetails,
+      @Valid @RequestBody UpdateInfoRequest request) {
+    if (userDetails == null) {
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ApiResponse("Bạn chưa đăng nhập", null));
+    }
+
+    UserEntity user = userService.updateInfo(userDetails, request);
+    AuthResponse convertedUser = userMapper.entityToAuthResponse(user);
+    Map<String, Object> data = createAuthResponse(convertedUser);
+    return ResponseEntity.ok(new ApiResponse("Cập nhật thông tin thành công", data));
   }
 
   private Map<String, Object> createAuthResponse(AuthResponse authResponse) {

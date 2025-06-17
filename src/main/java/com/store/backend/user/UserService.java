@@ -6,6 +6,7 @@ import com.store.backend.user.request.ForgotPasswordRequest;
 import com.store.backend.user.request.ResetPasswordRequest;
 import com.store.backend.user.request.SignInRequest;
 import com.store.backend.user.request.SignUpRequest;
+import com.store.backend.user.request.UpdateInfoRequest;
 import com.store.backend.user.request.VerifyForgotPasswordRequest;
 import com.store.backend.user.request.VerifySignUpRequest;
 
@@ -25,4 +26,6 @@ public interface UserService {
   UserEntity resetPassword(ResetPasswordRequest request);
 
   UserEntity changePassword(CustomUserDetails userDetails, ChangePasswordRequest request);
+
+  UserEntity updateInfo(CustomUserDetails userDetails, UpdateInfoRequest request);
 }
