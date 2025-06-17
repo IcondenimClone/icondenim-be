@@ -9,6 +9,7 @@ import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.jsontype.BasicPolymorphicTypeValidator;
 
 @Configuration
 public class RedisConfig {
@@ -23,6 +24,11 @@ public class RedisConfig {
     template.setConnectionFactory(connectionFactory);
 
     ObjectMapper objectMapper = new ObjectMapper();
+    objectMapper.activateDefaultTyping(
+        BasicPolymorphicTypeValidator.builder()
+            .allowIfBaseType(Object.class)
+            .build(),
+        ObjectMapper.DefaultTyping.NON_FINAL);
     Jackson2JsonRedisSerializer<Object> serializer = new Jackson2JsonRedisSerializer<>(objectMapper, Object.class);
 
     template.setKeySerializer(new StringRedisSerializer());

@@ -12,7 +12,9 @@ import org.springframework.stereotype.Service;
 
 import com.store.backend.cache.RedisService;
 import com.store.backend.exception.AlreadyExistsException;
+import com.store.backend.exception.NotCorrectException;
 import com.store.backend.exception.NotFoundException;
+import com.store.backend.exception.TooManyException;
 import com.store.backend.smtp.EmailService;
 import com.store.backend.user.UserEntity;
 import com.store.backend.user.UserRepository;
@@ -21,13 +23,14 @@ import com.store.backend.user.dto.RegistrationDto;
 import com.store.backend.user.enums.UserRole;
 import com.store.backend.user.request.SignInRequest;
 import com.store.backend.user.request.SignUpRequest;
+import com.store.backend.user.request.VerifySignUpRequest;
+
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
 @Slf4j
 public class UserServiceImpl implements UserService {
   private final UserRepository userRepository;
@@ -37,11 +40,10 @@ public class UserServiceImpl implements UserService {
   private final RedisService redisService;
 
   @Override
-  public UserEntity signUp(SignUpRequest request) {
+  public String signUp(SignUpRequest request) {
     if (userRepository.existsByEmail(request.getEmail())) {
       throw new AlreadyExistsException("Email đã tồn tại");
     }
-
     if (userRepository.existsByUsername(request.getUsername())) {
       throw new AlreadyExistsException("Username đã tồn tại");
     }
@@ -52,15 +54,41 @@ public class UserServiceImpl implements UserService {
 
     RegistrationDto regData = RegistrationDto.builder().email(request.getEmail()).username(request.getUsername())
         .password(hashedPassword).otp(otp).attempts(0).build();
-    
-    redisService.saveObject(registrationToken, regData, 3, TimeUnit.MINUTES);
 
     emailService.sendVerifySignUpEmail(request.getEmail(), "Xác nhận Đăng ký tài khoản", otp);
 
-    UserEntity user = UserEntity.builder().username(request.getUsername()).email(request.getEmail())
-        .firstName(request.getFirstName()).lastName(request.getLastName())
-        .password(passwordEncoder.encode(request.getPassword())).role(UserRole.USER).build();
+    String redisKey = redisService.setKey(registrationToken, ":signup:");
+    redisService.saveObject(redisKey, regData, 3, TimeUnit.MINUTES);
 
+    return registrationToken;
+  }
+
+  @Override
+  @Transactional
+  public UserEntity verifySignUp(VerifySignUpRequest request) {
+    String redisKey = redisService.setKey(request.getRegistrationToken(), ":signup:");
+    RegistrationDto regData = (RegistrationDto) redisService.getObject(redisKey);
+    if (regData.getAttempts() >= 3) {
+      redisService.deleteObject(redisKey);
+      throw new TooManyException("Vượt quá lần thử mã đăng ký");
+    }
+    regData.setAttempts(regData.getAttempts() + 1);
+    redisService.updateObject(redisKey, regData);
+    if (!regData.getOtp().equals(request.getOtp())) {
+      throw new NotCorrectException("Mã OTP không chính xác");
+    }
+
+    if (userRepository.existsByEmail(regData.getEmail())) {
+      throw new AlreadyExistsException("Email đã tồn tại");
+    }
+    if (userRepository.existsByUsername(regData.getUsername())) {
+      throw new AlreadyExistsException("Username đã tồn tại");
+    }
+
+    UserEntity user = UserEntity.builder().email(regData.getEmail()).username(regData.getUsername())
+        .password(regData.getPassword()).role(UserRole.USER).build();
+
+    redisService.deleteObject(redisKey);
     return userRepository.save(user);
   }
 

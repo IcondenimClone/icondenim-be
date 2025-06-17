@@ -8,6 +8,7 @@ import com.store.backend.user.enums.UserRole;
 import com.store.backend.user.mapper.UserMapper;
 import com.store.backend.user.request.SignInRequest;
 import com.store.backend.user.request.SignUpRequest;
+import com.store.backend.user.request.VerifySignUpRequest;
 import com.store.backend.user.response.AuthResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +19,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
+
+import java.util.HashMap;
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import jakarta.servlet.http.Cookie;
@@ -43,9 +48,17 @@ public class UserController {
   private String refreshTokenName;
 
   @PostMapping("/signup")
-  public ResponseEntity<ApiResponse> signup(@Valid @RequestBody SignUpRequest signupRequest,
-      HttpServletResponse response) {
-    UserEntity user = userService.signUp(signupRequest);
+  public ResponseEntity<ApiResponse> signup(@Valid @RequestBody SignUpRequest request) {
+    String registrationToken = userService.signUp(request);
+    Map<String, Object> data = new HashMap<>();
+    data.put("registrationToken", registrationToken);
+    return ResponseEntity.status(HttpStatus.CREATED)
+        .body(new ApiResponse("Vui lòng kiểm tra mã xác thực ở email", data));
+  }
+
+  @PostMapping("/signup/verify")
+  public ResponseEntity<ApiResponse> verifySignUp(@Valid @RequestBody VerifySignUpRequest request, HttpServletResponse response) {
+    UserEntity user = userService.verifySignUp(request);
     String userId = user.getId();
     UserRole role = user.getRole();
 
@@ -56,13 +69,14 @@ public class UserController {
     setTokenCookie(response, refreshTokenName, refreshToken, apiPrefix + "/auth/refresh", 7 * 24 * 60 * 60);
 
     AuthResponse convertedUser = userMapper.entityToAuthResponse(user);
-    return ResponseEntity.status(HttpStatus.CREATED).body(new ApiResponse("Đăng ký thành công", convertedUser));
+    Map<String, Object> data = createAuthResponse(convertedUser);
+    return ResponseEntity.status(HttpStatus.CREATED).body(new ApiResponse("Đăng ký thành công", data));
   }
 
   @PostMapping("/signin")
-  public ResponseEntity<ApiResponse> signin(@Valid @RequestBody SignInRequest signinRequest,
+  public ResponseEntity<ApiResponse> signin(@Valid @RequestBody SignInRequest request,
       HttpServletResponse response) {
-    UserEntity user = userService.signIn(signinRequest);
+    UserEntity user = userService.signIn(request);
     String userId = user.getId();
     UserRole role = user.getRole();
 
@@ -73,7 +87,8 @@ public class UserController {
     setTokenCookie(response, refreshTokenName, refreshToken, apiPrefix + "/auth/refresh", 7 * 24 * 60 * 60);
 
     AuthResponse convertedUser = userMapper.entityToAuthResponse(user);
-    return ResponseEntity.ok(new ApiResponse("Đăng nhập thành công", convertedUser));
+    Map<String, Object> data = createAuthResponse(convertedUser);
+    return ResponseEntity.ok(new ApiResponse("Đăng nhập thành công", data));
   }
 
   @PostMapping("/signout")
@@ -97,9 +112,9 @@ public class UserController {
 
     UserEntity user = userService.getUserById(userDetails.getId());
     AuthResponse convertedUser = userMapper.entityToAuthResponse(user);
-
+    Map<String, Object> data = createAuthResponse(convertedUser);
     return ResponseEntity.status(HttpStatus.OK)
-        .body(new ApiResponse("Lấy thông tin người dùng thành công", convertedUser));
+        .body(new ApiResponse("Lấy thông tin người dùng thành công", data));
   }
 
   @GetMapping("/refresh")
@@ -127,6 +142,12 @@ public class UserController {
     setTokenCookie(response, refreshTokenName, refreshToken, apiPrefix + "/auth/refresh", 7 * 24 * 60 * 60);
 
     return ResponseEntity.ok(new ApiResponse("Làm mới token thành công", null));
+  }
+
+  private Map<String, Object> createAuthResponse(AuthResponse authResponse) {
+    Map<String, Object> data = new HashMap<>();
+    data.put("user", authResponse);
+    return data;
   }
 
   private void setTokenCookie(HttpServletResponse response, String name, String value, String path, int maxAge) {

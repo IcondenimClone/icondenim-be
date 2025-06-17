@@ -19,6 +19,11 @@ public class RedisServiceImpl implements RedisService {
   private final StringRedisTemplate stringRedisTemplate;
 
   @Override
+  public String setKey(String originKey, String keyType) {
+    return new StringBuilder().append("icondenim").append(keyType).append(originKey).toString();
+  }
+
+  @Override
   public void saveString(String key, String content, long timeout, TimeUnit unit) {
     stringRedisTemplate.opsForValue().set(key, content, timeout, unit);
     log.info("Đã lưu key '{}' vào Redis với TTL {} {}", key, timeout, unit);
