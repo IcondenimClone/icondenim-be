@@ -1,5 +1,7 @@
 package com.store.backend.common;
 
+import java.util.Map;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -7,5 +9,5 @@ import lombok.Data;
 @Data
 public class ApiResponse {
   private String message;
-  private Object data;
+  private Map<String, Object> data;
 }
