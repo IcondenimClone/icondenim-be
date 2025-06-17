@@ -83,19 +83,21 @@ public class SecurityConfig {
 
   @Bean
   public AuthenticationEntryPoint authenticationEntryPoint() {
-    return (_, response, authException) -> {
+    return (_, response, _) -> {
+      response.setCharacterEncoding("UTF-8");
       response.setContentType("application/json");
       response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-      response.getWriter().write("{\"error\": \"Unauthorized\", \"message\": \"" + authException.getMessage() + "\"}");
+      response.getWriter().write("{\"message\": \"Bạn chưa đăng nhập\", \"data\": null}");
     };
   }
 
   @Bean
   public AccessDeniedHandler accessDeniedHandler() {
-    return (_, response, accessDeniedException) -> {
+    return (_, response, _) -> {
+      response.setCharacterEncoding("UTF-8");
       response.setContentType("application/json");
       response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-      response.getWriter().write("{\"error\": \"Access Denied\", \"message\": \"" + accessDeniedException.getMessage() + "\"}");
+      response.getWriter().write("{\"message\": \"Bạn không có quyền truy cập vào tài nguyên này\", \"data\": null}");
     };
   }
 }

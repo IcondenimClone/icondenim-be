@@ -1,8 +1,13 @@
 package com.store.backend.user;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import com.store.backend.address.AddressEntity;
 import com.store.backend.common.BaseEntity;
 import com.store.backend.user.enums.UserRole;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -10,6 +15,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import lombok.AllArgsConstructor;
@@ -52,4 +58,8 @@ public class UserEntity extends BaseEntity {
 
   @Column(length = 50)
   private String lastName;
+
+  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+  @Builder.Default
+  private List<AddressEntity> addresses = new ArrayList<>();
 }

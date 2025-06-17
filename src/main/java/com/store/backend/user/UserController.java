@@ -246,7 +246,6 @@ public class UserController {
   private String extractRefreshTokenFromCookie(HttpServletRequest request) {
     if (request.getCookies() != null) {
       for (Cookie cookie : request.getCookies()) {
-        System.out.println(cookie.getName());
         if (refreshTokenName.equals(cookie.getName())) {
           return cookie.getValue();
         }
