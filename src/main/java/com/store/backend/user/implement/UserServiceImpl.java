@@ -28,6 +28,7 @@ import com.store.backend.user.request.ForgotPasswordRequest;
 import com.store.backend.user.request.ResetPasswordRequest;
 import com.store.backend.user.request.SignInRequest;
 import com.store.backend.user.request.SignUpRequest;
+import com.store.backend.user.request.UpdateInfoRequest;
 import com.store.backend.user.request.VerifyForgotPasswordRequest;
 import com.store.backend.user.request.VerifySignUpRequest;
 
@@ -152,6 +153,7 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
+  @Transactional
   public UserEntity resetPassword(ResetPasswordRequest request) {
     String redisKey = redisService.setKey(request.getResetPasswordToken(), ":reset-password:");
     String email = redisService.getString(redisKey);
@@ -164,12 +166,22 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
+  @Transactional
   public UserEntity changePassword(CustomUserDetails userDetails, ChangePasswordRequest request) {
     UserEntity user = getUserById(userDetails.getId());
     if (!passwordEncoder.matches(request.getOldPassword(), user.getPassword())) {
       throw new NotCorrectException("Mật khẩu cũ không khớp");
     }
     user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+    return userRepository.save(user);
+  }
+
+  @Override
+  @Transactional
+  public UserEntity updateInfo(CustomUserDetails userDetails, UpdateInfoRequest request) {
+    UserEntity user = getUserById(userDetails.getId());
+    user.setFirstName(request.getFirstName());
+    user.setLastName(request.getLastName());
     return userRepository.save(user);
   }
 
