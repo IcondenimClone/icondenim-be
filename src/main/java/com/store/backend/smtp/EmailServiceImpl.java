@@ -23,7 +23,7 @@ public class EmailServiceImpl implements EmailService {
   private String emailFrom;
 
   @Override
-  public void sendVerifySignUpEmail(String to, String subject, String otp) {
+  public void sendAuthEmail(String to, String subject, String otp) {
     Context context = new Context();
     context.setVariable("subject", subject);
     context.setVariable("otp", otp);

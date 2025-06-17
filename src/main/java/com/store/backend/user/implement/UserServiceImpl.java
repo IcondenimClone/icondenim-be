@@ -19,10 +19,16 @@ import com.store.backend.smtp.EmailService;
 import com.store.backend.user.UserEntity;
 import com.store.backend.user.UserRepository;
 import com.store.backend.user.UserService;
+import com.store.backend.user.customs.CustomUserDetails;
+import com.store.backend.user.dto.ForgotPasswordDto;
 import com.store.backend.user.dto.RegistrationDto;
 import com.store.backend.user.enums.UserRole;
+import com.store.backend.user.request.ChangePasswordRequest;
+import com.store.backend.user.request.ForgotPasswordRequest;
+import com.store.backend.user.request.ResetPasswordRequest;
 import com.store.backend.user.request.SignInRequest;
 import com.store.backend.user.request.SignUpRequest;
+import com.store.backend.user.request.VerifyForgotPasswordRequest;
 import com.store.backend.user.request.VerifySignUpRequest;
 
 import jakarta.transaction.Transactional;
@@ -55,7 +61,7 @@ public class UserServiceImpl implements UserService {
     RegistrationDto regData = RegistrationDto.builder().email(request.getEmail()).username(request.getUsername())
         .password(hashedPassword).otp(otp).attempts(0).build();
 
-    emailService.sendVerifySignUpEmail(request.getEmail(), "Xác nhận Đăng ký tài khoản", otp);
+    emailService.sendAuthEmail(request.getEmail(), "Xác nhận Đăng ký tài khoản", otp);
 
     String redisKey = redisService.setKey(registrationToken, ":signup:");
     redisService.saveObject(redisKey, regData, 3, TimeUnit.MINUTES);
@@ -103,6 +109,68 @@ public class UserServiceImpl implements UserService {
   @Override
   public UserEntity getUserById(String id) {
     return userRepository.findById(id).orElseThrow(() -> new NotFoundException("Không tìm thấy người dùng"));
+  }
+
+  @Override
+  public String forgotPassword(ForgotPasswordRequest request) {
+    if (!userRepository.existsByEmail(request.getEmail())) {
+      throw new NotFoundException("Người dùng không tồn tại");
+    }
+    String otp = generateOtp();
+    String forgotPasswordToken = generateUUID();
+
+    ForgotPasswordDto forgData = ForgotPasswordDto.builder().email(request.getEmail()).otp(otp).attempts(0).build();
+
+    emailService.sendAuthEmail(request.getEmail(), "Xác nhận Quên mật khẩu", otp);
+
+    String redisKey = redisService.setKey(forgotPasswordToken, ":forgot-password:");
+    redisService.saveObject(redisKey, forgData, 3, TimeUnit.MINUTES);
+
+    return forgotPasswordToken;
+  }
+
+  @Override
+  public String verifyForgotPassword(VerifyForgotPasswordRequest request) {
+    String redisKey = redisService.setKey(request.getForgotPasswordToken(), ":forgot-password:");
+    ForgotPasswordDto forgData = (ForgotPasswordDto) redisService.getObject(redisKey);
+    if (forgData.getAttempts() >= 3) {
+      redisService.deleteObject(redisKey);
+      throw new TooManyException("Vượt quá lần thử mã quên mật khẩu");
+    }
+
+    forgData.setAttempts(forgData.getAttempts() + 1);
+    redisService.updateObject(redisKey, forgData);
+    if (!forgData.getOtp().equals(request.getOtp())) {
+      throw new NotCorrectException("Mã OTP không chính xác");
+    }
+    redisService.deleteObject(redisKey);
+
+    String resetPasswordToken = generateUUID();
+    redisKey = redisService.setKey(resetPasswordToken, ":reset-password:");
+    redisService.saveString(redisKey, forgData.getEmail(), 3, TimeUnit.MINUTES);
+    return resetPasswordToken;
+  }
+
+  @Override
+  public UserEntity resetPassword(ResetPasswordRequest request) {
+    String redisKey = redisService.setKey(request.getResetPasswordToken(), ":reset-password:");
+    String email = redisService.getString(redisKey);
+    redisService.deleteString(redisKey);
+    
+    UserEntity user = userRepository.findByEmail(email)
+        .orElseThrow(() -> new NotFoundException("Không tìm thấy người dùng"));
+    user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+    return userRepository.save(user);
+  }
+
+  @Override
+  public UserEntity changePassword(CustomUserDetails userDetails, ChangePasswordRequest request) {
+    UserEntity user = getUserById(userDetails.getId());
+    if (!passwordEncoder.matches(request.getOldPassword(), user.getPassword())) {
+      throw new NotCorrectException("Mật khẩu cũ không khớp");
+    }
+    user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+    return userRepository.save(user);
   }
 
   private String generateOtp() {
