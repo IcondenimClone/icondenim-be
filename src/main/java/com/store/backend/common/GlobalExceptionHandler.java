@@ -5,10 +5,14 @@ import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
+
 import com.store.backend.exception.AlreadyExistsException;
+import com.store.backend.exception.ForbiddenException;
 import com.store.backend.exception.NotCorrectException;
 import com.store.backend.exception.NotFoundException;
 import com.store.backend.exception.TooManyException;
@@ -25,9 +29,27 @@ public class GlobalExceptionHandler {
     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse("Dữ liệu không hợp lệ", data));
   }
 
+  @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+  public ResponseEntity<ApiResponse> handleHttpRequestMethodNotSupportedException(
+      HttpRequestMethodNotSupportedException ex) {
+    return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED)
+        .body(new ApiResponse("Phương thức " + ex.getMethod() + " trong yêu cầu không được hỗ trợ", null));
+  }
+
+  @ExceptionHandler(NoResourceFoundException.class)
+  public ResponseEntity<ApiResponse> handleNoResourceFoundException(NoResourceFoundException ex) {
+    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ApiResponse("Không tìm thấy địa chỉ", null));
+  }
+
   @ExceptionHandler(BadCredentialsException.class)
   public ResponseEntity<ApiResponse> handleBadCredentialsException(BadCredentialsException ex) {
-    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse("Tài khoản hoặc mật khẩu không chính xác", null));
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+        .body(new ApiResponse("Tài khoản hoặc mật khẩu không chính xác", null));
+  }
+
+  @ExceptionHandler(ForbiddenException.class)
+  public ResponseEntity<ApiResponse> handleForbiddenException(ForbiddenException ex) {
+    return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ApiResponse(ex.getMessage(), null));
   }
 
   @ExceptionHandler(AlreadyExistsException.class)

@@ -3,14 +3,12 @@ package com.store.backend.user.request;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-@Data
+@Getter
 @AllArgsConstructor
 @NoArgsConstructor
-@Builder
 public class ChangePasswordRequest {
   @NotBlank(message = "Yêu cầu nhập mật khẩu cũ")
   @Size(min = 6, message = "Mật khẩu phải có ít nhất 6 ký tự")

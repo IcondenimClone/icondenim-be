@@ -35,6 +35,7 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 
 @RestController
 @RequiredArgsConstructor
@@ -206,7 +207,7 @@ public class UserController {
     return ResponseEntity.ok(new ApiResponse("Cập nhật mật khẩu thành công", data));
   }
 
-  @PutMapping("/update-info")
+  @PatchMapping("/update-info")
   public ResponseEntity<ApiResponse> updateInfo(@AuthenticationPrincipal CustomUserDetails userDetails,
       @Valid @RequestBody UpdateInfoRequest request) {
     if (userDetails == null) {

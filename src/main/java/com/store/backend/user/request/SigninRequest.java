@@ -3,14 +3,12 @@ package com.store.backend.user.request;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-@Data
+@Getter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 public class SignInRequest {
   @NotBlank(message = "Yêu cầu nhập username")
   @Size(min = 3, max = 50, message = "Username có độ dài từ 3 đến 50 ký tự")
