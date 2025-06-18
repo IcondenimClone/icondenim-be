@@ -5,6 +5,7 @@ import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -39,6 +40,11 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(NoResourceFoundException.class)
   public ResponseEntity<ApiResponse> handleNoResourceFoundException(NoResourceFoundException ex) {
     return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ApiResponse("Không tìm thấy địa chỉ", null));
+  }
+
+  @ExceptionHandler(AuthorizationDeniedException.class)
+  public ResponseEntity<ApiResponse> handleAuthorizationDeniedException(AuthorizationDeniedException ex) {
+    return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ApiResponse("Bạn không có quyền truy cập vào tài nguyên này", null));
   }
 
   @ExceptionHandler(BadCredentialsException.class)
