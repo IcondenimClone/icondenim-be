@@ -4,14 +4,12 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-@Data
+@Getter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 public class VerifyForgotPasswordRequest {
   @NotBlank(message = "Yêu cầu mã đăng ký")
   @Size(min = 36, max = 36, message = "Mã đăng ký phải có 36 ký tự")

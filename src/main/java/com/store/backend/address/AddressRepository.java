@@ -5,5 +5,7 @@ import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface AddressRepository extends JpaRepository<AddressEntity, String> {
-  List<AddressEntity> findByUserId(String userId);
+  long countByUserId(String userId);
+
+  List<AddressEntity> findAllByUserId(String userId);
 }

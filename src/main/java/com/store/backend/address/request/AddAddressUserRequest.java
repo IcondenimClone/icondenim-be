@@ -3,15 +3,15 @@ package com.store.backend.address.request;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
-@Builder
-public class AddAddressRequest {
+public class AddAddressUserRequest {
   @Size(max = 50, message = "Họ không vượt quá 50 ký tự")
   private String firstName;
 
