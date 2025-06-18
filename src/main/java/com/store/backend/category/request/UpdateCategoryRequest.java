@@ -1,6 +1,5 @@
 package com.store.backend.category.request;
 
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -10,8 +9,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
-public class CreateCategoryRequest {
-  @NotBlank(message = "Yêu cầu tên danh mục sản phẩm")
+public class UpdateCategoryRequest {
   @Size(max = 100, message = "Tên danh mục sản phẩm không vượt quá 100 ký tự")
   private String name;
 

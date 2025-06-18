@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import com.store.backend.exception.AlreadyExistsException;
+import com.store.backend.exception.ConflictException;
 import com.store.backend.exception.ForbiddenException;
 import com.store.backend.exception.NotCorrectException;
 import com.store.backend.exception.NotFoundException;
@@ -51,6 +52,11 @@ public class GlobalExceptionHandler {
   public ResponseEntity<ApiResponse> handleBadCredentialsException(BadCredentialsException ex) {
     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
         .body(new ApiResponse("Tài khoản hoặc mật khẩu không chính xác", null));
+  }
+
+  @ExceptionHandler(ConflictException.class)
+  public ResponseEntity<ApiResponse> handleConflictException(ConflictException ex) {
+    return ResponseEntity.status(HttpStatus.CONFLICT).body(new ApiResponse(ex.getMessage(), null));
   }
 
   @ExceptionHandler(ForbiddenException.class)
