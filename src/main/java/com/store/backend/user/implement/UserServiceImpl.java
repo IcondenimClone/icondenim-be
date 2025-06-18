@@ -182,6 +182,7 @@ public class UserServiceImpl implements UserService {
     UserEntity user = getUserById(userDetails.getId());
     if (request.getFirstName() != null) user.setFirstName(request.getFirstName());
     if (request.getLastName() != null) user.setLastName(request.getLastName());
+    if (request.getDob() != null) user.setDob(request.getDob());
     return userRepository.save(user);
   }
 

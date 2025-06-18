@@ -1,5 +1,6 @@
 package com.store.backend.user;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -58,6 +59,9 @@ public class UserEntity extends BaseEntity {
 
   @Column(length = 50)
   private String lastName;
+
+  @Column
+  private LocalDate dob;
 
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
   @Builder.Default

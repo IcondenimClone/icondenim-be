@@ -1,9 +1,7 @@
 package com.store.backend.user.response;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
-
-import com.store.backend.address.response.AddressResponse;
 import com.store.backend.user.enums.UserRole;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -21,6 +19,6 @@ public class AuthResponse {
   private UserRole role;
   private String firstName;
   private String lastName;
+  private LocalDate dob;
   private LocalDateTime createdAt;
-  private List<AddressResponse> addresses;
 }
