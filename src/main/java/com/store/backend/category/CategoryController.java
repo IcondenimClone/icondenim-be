@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.store.backend.category.mapper.CategoryMapper;
 import com.store.backend.category.request.CreateCategoryRequest;
+import com.store.backend.category.request.UpdateCategoryRequest;
 import com.store.backend.category.response.CategoryResponse;
 import com.store.backend.common.ApiResponse;
 
@@ -45,9 +47,18 @@ public class CategoryController {
     return ResponseEntity.ok(new ApiResponse("Lấy danh mục sản phẩm thành công", data));
   }
 
+  @PatchMapping("/{id}")
+  public ResponseEntity<ApiResponse> updateCategory(@PathVariable String id,
+      @Valid @RequestBody UpdateCategoryRequest request) {
+    CategoryEntity category = categoryService.updateCategory(id, request);
+    CategoryResponse convertedCategory = categoryMapper.entityToResponse(category);
+    Map<String, Object> data = createCategoryResponse(convertedCategory);
+    return ResponseEntity.ok(new ApiResponse("Cập nhật danh mục sản phẩm thành công", data));
+  }
+
   private Map<String, Object> createCategoryResponse(CategoryResponse response) {
     Map<String, Object> data = new HashMap<>();
     data.put("category", response);
     return data;
-  } 
+  }
 }
