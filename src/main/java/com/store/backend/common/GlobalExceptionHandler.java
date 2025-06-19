@@ -2,6 +2,7 @@ package com.store.backend.common;
 
 import java.util.HashMap;
 import java.util.Map;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import com.store.backend.exception.AlreadyExistsException;
+import com.store.backend.exception.BadRequestException;
 import com.store.backend.exception.ConflictException;
 import com.store.backend.exception.ForbiddenException;
 import com.store.backend.exception.NotCorrectException;
@@ -57,6 +59,11 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(ConflictException.class)
   public ResponseEntity<ApiResponse> handleConflictException(ConflictException ex) {
     return ResponseEntity.status(HttpStatus.CONFLICT).body(new ApiResponse(ex.getMessage(), null));
+  }
+
+  @ExceptionHandler(BadRequestException.class)
+  public ResponseEntity<ApiResponse> handleBadRequestException(BadRequestException ex) {
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse(ex.getMessage(), null));
   }
 
   @ExceptionHandler(ForbiddenException.class)
