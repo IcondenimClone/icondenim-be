@@ -9,4 +9,6 @@ public interface CategoryService {
   CategoryEntity getCategoryBySlug(String slug);
 
   CategoryEntity updateCategory(String id, UpdateCategoryRequest request);
+
+  void deleteCategory(String id);
 }

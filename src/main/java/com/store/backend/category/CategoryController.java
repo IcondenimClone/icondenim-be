@@ -6,6 +6,7 @@ import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -30,8 +31,8 @@ public class CategoryController {
   private final CategoryService categoryService;
   private final CategoryMapper categoryMapper;
 
-  @PreAuthorize("hasRole('ROLE_ADMIN')")
   @PostMapping
+  @PreAuthorize("hasRole('ROLE_ADMIN')")
   public ResponseEntity<ApiResponse> createCategory(@Valid @RequestBody CreateCategoryRequest request) {
     CategoryEntity category = categoryService.createCategory(request);
     CategoryResponse convertedCategory = categoryMapper.entityToResponse(category);
@@ -48,12 +49,21 @@ public class CategoryController {
   }
 
   @PatchMapping("/{id}")
+  @PreAuthorize("hasRole('ROLE_ADMIN')")
   public ResponseEntity<ApiResponse> updateCategory(@PathVariable String id,
       @Valid @RequestBody UpdateCategoryRequest request) {
     CategoryEntity category = categoryService.updateCategory(id, request);
     CategoryResponse convertedCategory = categoryMapper.entityToResponse(category);
     Map<String, Object> data = createCategoryResponse(convertedCategory);
     return ResponseEntity.ok(new ApiResponse("Cập nhật danh mục sản phẩm thành công", data));
+  }
+
+
+  @DeleteMapping("/{id}")
+  @PreAuthorize("hasRole('ROLE_ADMIN')")
+  public ResponseEntity<ApiResponse> deleteCategory(@PathVariable String id) {
+    categoryService.deleteCategory(id);
+    return ResponseEntity.ok(new ApiResponse("Xóa danh mục sản phẩm thành công", null));
   }
 
   private Map<String, Object> createCategoryResponse(CategoryResponse response) {

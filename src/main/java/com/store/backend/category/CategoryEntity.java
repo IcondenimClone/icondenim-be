@@ -13,9 +13,8 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import lombok.AllArgsConstructor;
@@ -43,11 +42,12 @@ public class CategoryEntity extends BaseEntity {
   @Column(nullable = false, length = 100)
   private String slug;
 
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "parent_id")
-  private CategoryEntity parent;
+  @ManyToMany(fetch = FetchType.LAZY)
+  @JoinTable(name = "category_parents", joinColumns = @JoinColumn(name = "child_id"), inverseJoinColumns = @JoinColumn(name = "parent_id"))
+  @Builder.Default
+  private Set<CategoryEntity> parents = new HashSet<>();
 
-  @OneToMany(mappedBy = "parent", fetch = FetchType.LAZY)
+  @ManyToMany(mappedBy = "parents", fetch = FetchType.LAZY)
   @Builder.Default
   private Set<CategoryEntity> children = new HashSet<>();
 
