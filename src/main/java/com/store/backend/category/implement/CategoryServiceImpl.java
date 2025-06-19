@@ -60,13 +60,13 @@ public class CategoryServiceImpl implements CategoryService {
   public CategoryEntity updateCategory(String id, UpdateCategoryRequest request) {
     CategoryEntity category = categoryRepository.findById(id)
         .orElseThrow(() -> new NotFoundException("Không tìm thấy danh mục sản phẩm"));
-    if (request.getName() != null) {
-      String slug = SlugUtil.toSlug(request.getName());
-      if (categoryRepository.existsBySlug(slug)) {
+    if (request.getName() != null && !request.getName().equals(category.getName())) {
+      String newSlug = SlugUtil.toSlug(request.getName());
+      if (categoryRepository.existsBySlug(newSlug)) {
         throw new AlreadyExistsException("Danh mục sản phẩm đã tồn tại");
       }
       category.setName(request.getName());
-      category.setSlug(slug);
+      category.setSlug(newSlug);
     }
     if (request.getParentIds() != null && !request.getParentIds().isEmpty()) {
       if (request.getParentIds().contains(id))
@@ -84,11 +84,10 @@ public class CategoryServiceImpl implements CategoryService {
   @Override
   @Transactional
   public void deleteCategory(String id) {
-    if (categoryRepository.existsById(id)) {
-      categoryRepository.deleteById(id);
-    } else {
+    if (!categoryRepository.existsById(id)) {
       throw new NotFoundException("Không tìm thấy danh mục sản phẩm");
-    }
+    } 
+    categoryRepository.deleteById(id);
   }
 
   private void validateNoRecursiveLoop(CategoryEntity child, Set<CategoryEntity> newParents) {

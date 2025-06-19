@@ -1,15 +1,13 @@
-package com.store.backend.category.dto;
+package com.store.backend.category.response;
 
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Builder
-public class ChildCategoryDto {
+public class BaseCategoryResponse {
   private String id;
   private String name;
   private String slug;
