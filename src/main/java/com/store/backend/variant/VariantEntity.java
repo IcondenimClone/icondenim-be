@@ -50,25 +50,20 @@ public class VariantEntity extends BaseEntity {
   private String sku;
 
   @Column(nullable = false)
-  @Builder.Default
-  private int quantity = 200;
+  private int quantity;
 
   @Column(nullable = false)
   @Builder.Default
   private int quantityPurchase = 0;
 
   @Column(nullable = false)
-  @Builder.Default
-  private int stock = 200;
+  private int stock;
 
   @Column(nullable = false)
-  @Builder.Default
-  private boolean inStock = true;
+  private boolean inStock;
 
   public void setStock() {
     this.stock = this.quantity - this.quantityPurchase;
-    if (this.stock < 5) {
-      this.inStock = false;
-    }
+    this.inStock = this.stock >= 5;
   }
 }
