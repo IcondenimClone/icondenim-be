@@ -43,9 +43,8 @@ public class ImageEntity extends BaseEntity {
   @Column(nullable = false, length = 255)
   private String url;
 
-  @Column(name = "sort_order")
-  @Builder.Default
-  private int sortOrder = 0;
+  @Column(name = "sort_order", nullable = false)
+  private int sortOrder;
 
   @Column(nullable = false)
   @Builder.Default
