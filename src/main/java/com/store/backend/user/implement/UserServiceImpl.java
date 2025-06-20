@@ -10,11 +10,11 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import com.store.backend.cache.RedisService;
 import com.store.backend.exception.AlreadyExistsException;
 import com.store.backend.exception.NotCorrectException;
 import com.store.backend.exception.NotFoundException;
 import com.store.backend.exception.TooManyException;
+import com.store.backend.redis.RedisService;
 import com.store.backend.smtp.EmailService;
 import com.store.backend.user.UserEntity;
 import com.store.backend.user.UserRepository;

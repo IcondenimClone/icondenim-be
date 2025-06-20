@@ -1,4 +1,4 @@
-package com.store.backend.cache;
+package com.store.backend.redis;
 
 import java.util.concurrent.TimeUnit;
 
