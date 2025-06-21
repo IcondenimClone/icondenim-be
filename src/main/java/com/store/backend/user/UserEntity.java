@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.store.backend.address.AddressEntity;
+import com.store.backend.cart.entity.CartEntity;
 import com.store.backend.common.BaseEntity;
 import com.store.backend.user.enums.UserRole;
 
@@ -17,6 +18,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import lombok.AllArgsConstructor;
@@ -62,6 +64,9 @@ public class UserEntity extends BaseEntity {
 
   @Column
   private LocalDate dob;
+
+  @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+  private CartEntity cart;
 
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
   @Builder.Default
