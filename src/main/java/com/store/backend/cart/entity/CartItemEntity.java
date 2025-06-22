@@ -2,6 +2,7 @@ package com.store.backend.cart.entity;
 
 import java.math.BigDecimal;
 
+import com.store.backend.common.BaseEntity;
 import com.store.backend.variant.VariantEntity;
 
 import jakarta.persistence.Column;
@@ -26,7 +27,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @Builder
 @Table(name = "cart_items")
-public class CartItemEntity {
+public class CartItemEntity extends BaseEntity {
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
   private String id;
@@ -47,6 +48,14 @@ public class CartItemEntity {
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "variant_id")
   private VariantEntity variant;
+
+  public void setUnitPrice() {
+    if (this.variant.getProduct().getSalePrice() != null) {
+      this.unitPrice = this.variant.getProduct().getSalePrice();
+    } else {
+      this.unitPrice = this.variant.getProduct().getPrice();
+    }
+  }
 
   public void setTotalPrice() {
     this.totalPrice = this.unitPrice.multiply(BigDecimal.valueOf(this.quantity));

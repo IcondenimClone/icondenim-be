@@ -1,10 +1,15 @@
 package com.store.backend.variant;
 
+import java.util.HashSet;
+import java.util.Set;
+
+import com.store.backend.cart.entity.CartItemEntity;
 import com.store.backend.color.ColorEntity;
 import com.store.backend.common.BaseEntity;
 import com.store.backend.product.ProductEntity;
 import com.store.backend.size.SizeEntity;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -13,6 +18,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import lombok.AllArgsConstructor;
@@ -61,6 +67,10 @@ public class VariantEntity extends BaseEntity {
 
   @Column(nullable = false)
   private boolean inStock;
+
+  @OneToMany(mappedBy = "variant", cascade = CascadeType.ALL, orphanRemoval = true)
+  @Builder.Default
+  private Set<CartItemEntity> cartItems = new HashSet<>();
 
   public void setStock() {
     this.stock = this.quantity - this.quantityPurchase;

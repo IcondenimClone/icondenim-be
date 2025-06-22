@@ -10,6 +10,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.store.backend.cart.service.CartService;
 import com.store.backend.exception.AlreadyExistsException;
 import com.store.backend.exception.NotCorrectException;
 import com.store.backend.exception.NotFoundException;
@@ -42,6 +43,7 @@ import lombok.extern.slf4j.Slf4j;
 public class UserServiceImpl implements UserService {
   private final UserRepository userRepository;
   private final PasswordEncoder passwordEncoder;
+  private final CartService cartService;
   private final AuthenticationManager authenticationManager;
   private final EmailService emailService;
   private final RedisService redisService;
@@ -94,6 +96,8 @@ public class UserServiceImpl implements UserService {
 
     UserEntity user = UserEntity.builder().email(regData.getEmail()).username(regData.getUsername())
         .password(regData.getPassword()).role(UserRole.USER).build();
+    
+    cartService.createDefaultCart(user.getId());
 
     redisService.deleteObject(redisKey);
     return userRepository.save(user);
