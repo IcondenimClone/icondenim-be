@@ -1,7 +1,7 @@
 package com.store.backend.cart.entity;
 
 import java.math.BigDecimal;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Set;
 
 import com.store.backend.common.BaseEntity;
@@ -44,10 +44,18 @@ public class CartEntity extends BaseEntity {
   @Builder.Default
   private int totalQuantity = 0;
 
-  @OneToOne(mappedBy = "cart")
+  @OneToOne
   @JoinColumn(name = "user_id", nullable = false)
   private UserEntity user;
 
   @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true)
-  private Set<CartItemEntity> items;
+  @Builder.Default
+  private Set<CartItemEntity> items = new HashSet<>();
+
+  public void addItem(CartItemEntity item) {
+    this.items.add(item);
+    item.setCart(this);
+    this.totalQuantity += item.getQuantity();
+    this.totalPrice = this.totalPrice.add(item.getTotalPrice());
+  }
 }
