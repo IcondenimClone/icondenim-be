@@ -33,13 +33,15 @@ public class CartItemServiceImpl implements CartItemService {
     CartItemEntity cartItem = cartItemRepository.findByCartIdAndVariantId(cart.getId(), variant.getId()).orElse(null);
     if (cartItem != null) {
       cartItem.setQuantity(cartItem.getQuantity() + request.getQuantity());
+      cartItem.setUnitPrice();
+      cartItem.setTotalPrice();
+      cart.recalculateCart();
     } else {
       cartItem = CartItemEntity.builder().cart(cart).variant(variant).quantity(request.getQuantity()).build();
+      cartItem.setUnitPrice();
+      cartItem.setTotalPrice();
       cart.addItem(cartItem);
     }
-    cartItem.setUnitPrice();
-    cartItem.setTotalPrice();
-    cart.recalculateCart();
     return cartItemRepository.save(cartItem);
   }
 
@@ -59,5 +61,17 @@ public class CartItemServiceImpl implements CartItemService {
     cart.recalculateCart();
 
     return cartItemRepository.save(cartItem);
+  }
+
+  @Override
+  public void removeItemFromCart(String id, String userId) {
+    CartItemEntity cartItem = cartItemRepository.findById(id)
+        .orElseThrow(() -> new NotFoundException("Mặt hàng trong giỏ hàng không tồn tại"));
+    if (!cartItem.getCart().getUser().getId().equals(userId)) {
+      throw new ForbiddenException("Bạn không có quyền thực hiện hành động");
+    }
+    CartEntity cart = cartItem.getCart();
+    cart.removeItem(cartItem);
+    cartRepository.save(cart);
   }
 }

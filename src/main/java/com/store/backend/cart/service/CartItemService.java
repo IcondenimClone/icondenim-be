@@ -8,4 +8,6 @@ public interface CartItemService {
   CartItemEntity addItemToCart(String userId, AddItemToCartRequest request);
 
   CartItemEntity updateItemInCart(String id, String userId, UpdateItemInCartRequest request);
+
+  void removeItemFromCart(String id, String userId);
 }
