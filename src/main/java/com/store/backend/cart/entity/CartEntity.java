@@ -58,4 +58,11 @@ public class CartEntity extends BaseEntity {
     this.totalQuantity += item.getQuantity();
     this.totalPrice = this.totalPrice.add(item.getTotalPrice());
   }
+
+  public void recalculateCart() {
+    this.totalQuantity = this.items.stream().mapToInt(CartItemEntity::getQuantity).sum();
+    this.totalPrice = this.items.stream()
+        .map(CartItemEntity::getTotalPrice)
+        .reduce(BigDecimal.ZERO, BigDecimal::add);
+  }
 }
