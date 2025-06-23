@@ -34,6 +34,7 @@ import lombok.Setter;
 public class CartEntity extends BaseEntity {
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
+  @Column(nullable = false, length = 36)
   private String id;
 
   @Column(nullable = false)
@@ -55,8 +56,13 @@ public class CartEntity extends BaseEntity {
   public void addItem(CartItemEntity item) {
     this.items.add(item);
     item.setCart(this);
-    this.totalQuantity += item.getQuantity();
-    this.totalPrice = this.totalPrice.add(item.getTotalPrice());
+    recalculateCart();
+  }
+
+  public void removeItem(CartItemEntity item) {
+    this.items.remove(item);
+    item.setCart(null);
+    recalculateCart();
   }
 
   public void recalculateCart() {
@@ -64,5 +70,10 @@ public class CartEntity extends BaseEntity {
     this.totalPrice = this.items.stream()
         .map(CartItemEntity::getTotalPrice)
         .reduce(BigDecimal.ZERO, BigDecimal::add);
+  }
+
+  public void clearCart() {
+    this.items.clear();
+    recalculateCart();
   }
 }

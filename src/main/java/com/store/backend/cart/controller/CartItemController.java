@@ -5,6 +5,7 @@ import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -48,5 +49,11 @@ public class CartItemController {
     CartItemResponse convertedCartItem = cartItemMapper.entityToResponse(cart);
     Map<String, Object> data = Map.of("cartItem", convertedCartItem);
     return ResponseEntity.ok(new ApiResponse("Cập nhật mặt hàng trong giỏ hàng thành công", data));
+  }
+
+  @DeleteMapping("/{id}")
+  public ResponseEntity<ApiResponse> removeItemFromCart(@AuthenticationPrincipal CustomUserDetails userDetails,  @PathVariable String id) {
+    cartItemService.removeItemFromCart(id, userDetails.getId());
+    return ResponseEntity.ok(new ApiResponse("Xóa mặt hàng khỏi giỏ hàng thành công", null));
   }
 }
