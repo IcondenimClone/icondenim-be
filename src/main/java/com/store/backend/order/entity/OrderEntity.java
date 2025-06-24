@@ -1,11 +1,14 @@
 package com.store.backend.order.entity;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
 import com.store.backend.common.BaseEntity;
 import com.store.backend.order.enums.OrderStatus;
+import com.store.backend.order.enums.PaymentMethod;
+import com.store.backend.order.enums.PaymentStatus;
 import com.store.backend.user.UserEntity;
 
 import jakarta.persistence.CascadeType;
@@ -41,8 +44,17 @@ public class OrderEntity extends BaseEntity {
   private String id;
 
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "user_id", nullable = false)
+  @JoinColumn(name = "user_id")
   private UserEntity user;
+
+  @Column(nullable = false, length = 100)
+  private String fullName;
+
+  @Column(nullable = false, length = 11)
+  private String phoneNumber;
+
+  @Column(nullable = false)
+  private String shippingAddress;
 
   @Column(nullable = false)
   private int totalQuantity;
@@ -53,7 +65,22 @@ public class OrderEntity extends BaseEntity {
   @Enumerated(EnumType.STRING)
   @Column(nullable = false, length = 20)
   @Builder.Default
-  private OrderStatus status = OrderStatus.PENDING;
+  private OrderStatus status = OrderStatus.WAITING;
+
+  @Enumerated(EnumType.STRING)
+  @Column(nullable = false, length = 20)
+  private PaymentMethod paymentMethod;
+
+  @Enumerated(EnumType.STRING)
+  @Column(nullable = false, length = 20)
+  @Builder.Default
+  private PaymentStatus paymentStatus = PaymentStatus.UNPAID;
+
+  @Column
+  private LocalDateTime paidAt;
+
+  @Column
+  private String note;
 
   @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
   @Builder.Default
