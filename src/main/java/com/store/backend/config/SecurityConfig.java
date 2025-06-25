@@ -41,7 +41,7 @@ public class SecurityConfig {
         .cors(cors -> cors.configurationSource(corsConfigurationSource()))
         .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests(authz -> authz.requestMatchers("/auth/**").permitAll()
-            .requestMatchers("/admin/**").hasRole("ADMIN")
+            .requestMatchers("/guest/**").permitAll()
             .anyRequest().authenticated())
         .authenticationProvider(authenticationProvider())
         .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)

@@ -47,6 +47,10 @@ public class OrderEntity extends BaseEntity {
   @JoinColumn(name = "user_id")
   private UserEntity user;
 
+  @Column(nullable = false)
+  @Builder.Default
+  private boolean guestOrder = false;
+
   @Column(nullable = false, length = 100)
   private String fullName;
 
