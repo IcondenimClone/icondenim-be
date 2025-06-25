@@ -8,4 +8,6 @@ public interface OrderService {
   OrderEntity placeOrder(String userId, PlaceOrderRequest request);
 
   OrderEntity guestOrder(GuestOrderRequest request);
+
+  void confirmOrder(String token);
 }

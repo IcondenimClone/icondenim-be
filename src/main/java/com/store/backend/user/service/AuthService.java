@@ -1,5 +1,6 @@
-package com.store.backend.user;
+package com.store.backend.user.service;
 
+import com.store.backend.user.UserEntity;
 import com.store.backend.user.customs.CustomUserDetails;
 import com.store.backend.user.request.ChangePasswordRequest;
 import com.store.backend.user.request.ForgotPasswordRequest;
@@ -10,7 +11,7 @@ import com.store.backend.user.request.UpdateInfoRequest;
 import com.store.backend.user.request.VerifyForgotPasswordRequest;
 import com.store.backend.user.request.VerifySignUpRequest;
 
-public interface UserService {
+public interface AuthService {
   String signUp(SignUpRequest request);
 
   UserEntity verifySignUp(VerifySignUpRequest request);

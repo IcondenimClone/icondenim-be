@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title th:text="${subject}">Tiêu đề Email</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f4f4f4;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background-color: #ffffff;
+      padding: 20px;
+      border-radius: 8px;
+    }
+
+    h2 {
+      color: #333;
+    }
+
+    .noreply {
+      color: #777;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 4px;
+      margin-bottom: 20px;
+    }
+    th, td {
+      border: 1px solid #333;
+      padding: 10px;
+      text-align: left;
+      vertical-align: middle;
+    }
+    th {
+      background-color: #f4f4f4;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Icondenim</h2>
+    <h3 th:text="'Xin chào ' + ${order.fullName} + ','">Xin chào,</h3>
+    <p>Bạn vừa đặt một đơn hàng tại Icondenim.</p>
+    <p><strong>Tổng tiền:</strong> <span th:text="${order.totalPrice} + '₫'"></span></p>
+    <p><strong>Địa chỉ giao hàng:</strong> <span th:text="${order.shippingAddress}"></span></p>
+
+    <h3>Chi tiết đơn hàng:</h3>
+    <div th:if="${items != null and !items.isEmpty()}">
+      <table>
+        <thead>
+          <tr>
+            <th>Ảnh</th>
+            <th>Sản phẩm</th>
+            <th>Số lượng</th>
+            <th>Đơn giá</th>
+            <th>Thành tiền</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr th:each="item : ${items}">
+            <td>
+              <img th:src="${item != null and item.variant != null and item.variant.product != null and item.variant.product.images != null and !item.variant.product.images.isEmpty()} ? ${item.variant.product.images[0].url} : '/default-image.jpg'" alt="Ảnh" width="80" />
+            </td>
+            <td th:text="${item != null and item.variant != null and item.variant.product != null and item.variant.product.title != null and item.variant.color != null and item.variant.size != null} ? ${item.variant.product.title} + ', ' + ${item.variant.size.name} + ' - ' + ${item.variant.color.name} : 'N/A'">Tên sản phẩm</td>
+            <td th:text="${item != null and item.quantity != null} ? ${item.quantity} : 'N/A'">1</td>
+            <td th:text="${item != null and item.unitPrice != null} ? ${#numbers.formatDecimal(item.unitPrice, 0, 'COMMA', 2, 'POINT')} + '₫' : 'N/A'">100000</td>
+            <td th:text="${item != null and item.totalPrice != null} ? ${#numbers.formatDecimal(item.totalPrice, 0, 'COMMA', 2, 'POINT')} + '₫' : 'N/A'">200000</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div th:if="${items == null or items.isEmpty()}">
+      <p>Không có chi tiết đơn hàng.</p>
+    </div>
+
+    <p style="display: flex; justify-content: center;">
+      <a th:href="${confirmLink}" style="padding: 7px 10px; background-color: #333; color: white; text-decoration: none;">
+        Xác nhận đơn hàng
+      </a>
+    </p>
+
+    <p>Xin cảm ơn bạn đã mua sắm tại IconDenim.</p>
+    <p class="noreply">Email này được gửi từ Icondenim. Vui lòng không trả lời trực tiếp.</p>
+  </div>
+</body>
+</html>
