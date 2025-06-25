@@ -3,6 +3,8 @@ package com.store.backend.order.service;
 import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import org.springframework.stereotype.Service;
 
@@ -13,8 +15,11 @@ import com.store.backend.exception.NotFoundException;
 import com.store.backend.guest.request.GuestOrderRequest;
 import com.store.backend.order.entity.OrderEntity;
 import com.store.backend.order.entity.OrderItemEntity;
+import com.store.backend.order.enums.OrderStatus;
 import com.store.backend.order.repository.OrderRepository;
 import com.store.backend.order.request.PlaceOrderRequest;
+import com.store.backend.redis.RedisService;
+import com.store.backend.smtp.EmailService;
 import com.store.backend.user.UserEntity;
 import com.store.backend.user.UserRepository;
 import com.store.backend.variant.VariantEntity;
@@ -30,6 +35,8 @@ public class OrderServiceImpl implements OrderService {
   private final UserRepository userRepository;
   private final VariantRepository variantRepository;
   private final CartRepository cartRepository;
+  private final RedisService redisService;
+  private final EmailService emailService;
 
   @Override
   @Transactional
@@ -58,7 +65,10 @@ public class OrderServiceImpl implements OrderService {
 
     cart.clearCart();
     cartRepository.save(cart);
-    return orderRepository.save(newOrder);
+
+    OrderEntity savedOrder = orderRepository.save(newOrder);
+    sendEmail(savedOrder, user.getEmail());
+    return savedOrder;
   }
 
   @Override
@@ -66,7 +76,8 @@ public class OrderServiceImpl implements OrderService {
   public OrderEntity guestOrder(GuestOrderRequest request) {
     String shippingAddress = mergeAddress(request.getAddress(), request.getCommune(), request.getDistrict(),
         request.getProvince());
-    OrderEntity newOrder = OrderEntity.builder().guestOrder(true).fullName(request.getFullName()).phoneNumber(request.getPhoneNumber())
+    OrderEntity newOrder = OrderEntity.builder().guestOrder(true).fullName(request.getFullName())
+        .phoneNumber(request.getPhoneNumber())
         .shippingAddress(shippingAddress).paymentMethod(request.getPaymentMethod()).note(request.getNote()).build();
 
     List<OrderItemEntity> items = getOrderItemsForGuest(request, newOrder);
@@ -77,7 +88,35 @@ public class OrderServiceImpl implements OrderService {
     newOrder.setTotalQuantity(totalQuantity);
     newOrder.setTotalPrice(totalPrice);
 
-    return orderRepository.save(newOrder);
+    OrderEntity savedOrder = orderRepository.save(newOrder);
+    sendEmail(savedOrder, request.getEmail());
+
+    return savedOrder;
+  }
+
+  @Override
+  public void confirmOrder(String token) {
+    String redisKey = redisService.setKey(token, ":order:");
+    String id = redisService.getString(redisKey);
+    OrderEntity order = orderRepository.findById(id).orElseThrow(() -> new NotFoundException("Không tìm thấy đơn hàng hoặc token không hợp lệ"));
+    if (order.getStatus() != OrderStatus.WAITING) {
+      throw new ConflictException("Đơn hàng đã được xử lý");
+    }
+
+    order.setStatus(OrderStatus.CONFIRMED);
+    orderRepository.save(order);
+
+    redisService.deleteString(redisKey);
+  }
+
+  private void sendEmail(OrderEntity savedOrder, String to) {
+    String confirmToken = UUID.randomUUID().toString();
+    String confirmLink = "http://localhost:2004/icondenim-be/orders/confirm?token=" + confirmToken;
+
+    emailService.sendOrderEmail(to, "Xác nhận Đơn đặt hàng tại Icondenim", savedOrder, confirmLink);
+
+    String redisKey = redisService.setKey(confirmToken, ":order:");
+    redisService.saveString(redisKey, savedOrder.getId(), 1, TimeUnit.DAYS);
   }
 
   private List<OrderItemEntity> getOrderItemsForGuest(GuestOrderRequest request, OrderEntity newOrder) {

@@ -1,8 +1,9 @@
-package com.store.backend.user;
+package com.store.backend.user.controller;
 
 import org.springframework.web.bind.annotation.RestController;
 import com.store.backend.common.ApiResponse;
 import com.store.backend.security.JwtService;
+import com.store.backend.user.UserEntity;
 import com.store.backend.user.customs.CustomUserDetails;
 import com.store.backend.user.enums.UserRole;
 import com.store.backend.user.mapper.UserMapper;
@@ -15,6 +16,8 @@ import com.store.backend.user.request.UpdateInfoRequest;
 import com.store.backend.user.request.VerifyForgotPasswordRequest;
 import com.store.backend.user.request.VerifySignUpRequest;
 import com.store.backend.user.response.AuthResponse;
+import com.store.backend.user.service.AuthService;
+
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -40,8 +43,8 @@ import org.springframework.web.bind.annotation.PatchMapping;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/auth")
-public class UserController {
-  private final UserService userService;
+public class AuthController {
+  private final AuthService userService;
   private final JwtService jwtService;
   private final UserMapper userMapper;
 

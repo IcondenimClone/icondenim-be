@@ -19,7 +19,6 @@ import com.store.backend.redis.RedisService;
 import com.store.backend.smtp.EmailService;
 import com.store.backend.user.UserEntity;
 import com.store.backend.user.UserRepository;
-import com.store.backend.user.UserService;
 import com.store.backend.user.customs.CustomUserDetails;
 import com.store.backend.user.dto.ForgotPasswordDto;
 import com.store.backend.user.dto.RegistrationDto;
@@ -32,15 +31,14 @@ import com.store.backend.user.request.SignUpRequest;
 import com.store.backend.user.request.UpdateInfoRequest;
 import com.store.backend.user.request.VerifyForgotPasswordRequest;
 import com.store.backend.user.request.VerifySignUpRequest;
+import com.store.backend.user.service.AuthService;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
-@Slf4j
-public class UserServiceImpl implements UserService {
+public class AuthServiceImpl implements AuthService {
   private final UserRepository userRepository;
   private final PasswordEncoder passwordEncoder;
   private final CartService cartService;
@@ -64,7 +62,7 @@ public class UserServiceImpl implements UserService {
     RegistrationDto regData = RegistrationDto.builder().email(request.getEmail()).username(request.getUsername())
         .password(hashedPassword).otp(otp).attempts(0).build();
 
-    emailService.sendAuthEmail(request.getEmail(), "Xác nhận Đăng ký tài khoản", otp);
+    emailService.sendAuthEmail(request.getEmail(), "Xác nhận Đăng ký tài khoản tại Icondenim", otp);
 
     String redisKey = redisService.setKey(registrationToken, ":signup:");
     redisService.saveObject(redisKey, regData, 3, TimeUnit.MINUTES);
@@ -126,7 +124,7 @@ public class UserServiceImpl implements UserService {
 
     ForgotPasswordDto forgData = ForgotPasswordDto.builder().email(request.getEmail()).otp(otp).attempts(0).build();
 
-    emailService.sendAuthEmail(request.getEmail(), "Xác nhận Quên mật khẩu", otp);
+    emailService.sendAuthEmail(request.getEmail(), "Xác nhận Quên mật khẩu tại Icondenim", otp);
 
     String redisKey = redisService.setKey(forgotPasswordToken, ":forgot-password:");
     redisService.saveObject(redisKey, forgData, 3, TimeUnit.MINUTES);
