@@ -4,12 +4,14 @@ import com.store.backend.color.response.BaseColorResponse;
 import com.store.backend.size.response.BaseSizeResponse;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class BaseVariantResponse {
   private String id;
   private String sku;
