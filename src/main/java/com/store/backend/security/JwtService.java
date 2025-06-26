@@ -12,11 +12,15 @@ public interface JwtService {
 
   String generateRefreshToken(String userId, UserRole role);
 
+  String generateGuestToken(String guestId);
+
   boolean isTokenValid(String token, UserEntity user);
 
   String extractUserId(String token);
 
   UserRole extractRole(String token);
+
+  String extractGuestId(String token);
 
   <T> T extractClaim(String token, Function<Claims, T> claimsResolver);
 }

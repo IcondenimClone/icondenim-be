@@ -33,6 +33,9 @@ public class JwtServiceImpl implements JwtService {
   @Value("${jwt.refresh-token-expiration:7}")
   private long refreshTokenExpirationDays;
 
+  @Value("${jwt.guest-token-expiration:30}")
+  private long guestTokenExpirationDays;
+
   @Override
   public String generateAccessToken(String userId, UserRole role) {
     return generateToken(userId, role, accessTokenExpirationMinutes, ChronoUnit.MINUTES);
@@ -41,6 +44,15 @@ public class JwtServiceImpl implements JwtService {
   @Override
   public String generateRefreshToken(String userId, UserRole role) {
     return generateToken(userId, role, refreshTokenExpirationDays, ChronoUnit.DAYS);
+  }
+
+  @Override
+  public String generateGuestToken(String guestId) {
+    Instant now = Instant.now();
+    Instant expirationTime = now.plus(guestTokenExpirationDays, ChronoUnit.DAYS);
+
+    return Jwts.builder().subject(guestId).issuedAt(Date.from(now)).expiration(Date.from(expirationTime))
+        .signWith(getSigningKey(), Jwts.SIG.HS256).compact();
   }
 
   private String generateToken(String userId, UserRole role, long expiration, ChronoUnit unit) {
@@ -70,6 +82,11 @@ public class JwtServiceImpl implements JwtService {
 
   @Override
   public String extractUserId(String token) {
+    return extractClaim(token, Claims::getSubject);
+  }
+
+  @Override 
+  public String extractGuestId(String token) {
     return extractClaim(token, Claims::getSubject);
   }
 

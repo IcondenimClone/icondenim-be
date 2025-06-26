@@ -5,12 +5,14 @@ import java.math.BigDecimal;
 import com.store.backend.variant.response.BaseVariantResponse;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class CartItemResponse {
   private String id;
   private BaseVariantResponse variant;
