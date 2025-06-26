@@ -7,6 +7,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -47,6 +49,22 @@ public class GuestController {
   private final OrderMapper orderMapper;
   private final JwtService jwtService;
 
+  @GetMapping("/carts")
+  public ResponseEntity<ApiResponse> guestGetCart(@AuthenticationPrincipal CustomUserDetails userDetails,
+      HttpServletRequest request) {
+    if (userDetails != null) {
+      return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ApiResponse("Bạn không có quyền truy cập", null));
+    }
+    String token = extractGuestTokenFromCookie(request);
+    if (token == null) {
+      return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ApiResponse("Bạn không có quyền truy cập", null));
+    }
+    String guestId = jwtService.extractGuestId(token);
+    GuestCartResponse cart = guestService.guestGetCart(guestId);
+    Map<String, Object> data = Map.of("cart", cart);
+    return ResponseEntity.ok(new ApiResponse("Lấy giỏ hàng thành công", data));
+  }
+
   @PostMapping("/cart-items")
   public ResponseEntity<ApiResponse> guestAddToCart(@AuthenticationPrincipal CustomUserDetails userDetails,
       HttpServletRequest request, @Valid @RequestBody AddItemToCartRequest cliRequest, HttpServletResponse response) {
@@ -67,7 +85,7 @@ public class GuestController {
     return ResponseEntity.ok(new ApiResponse("Thêm vào giỏ hàng thành công", data));
   }
 
-  @PutMapping("/cart-items/items/{variantId}")
+  @PutMapping("/cart-items/variants/{variantId}")
   public ResponseEntity<ApiResponse> guestUpdateInCart(@AuthenticationPrincipal CustomUserDetails userDetails,
       HttpServletRequest request, @PathVariable String variantId,
       @Valid @RequestBody UpdateItemInCartRequest cliRequest, HttpServletResponse response) {
@@ -84,6 +102,24 @@ public class GuestController {
     setTokenCookie(response, guestTokenName, guestToken, apiPrefix + "/guest", 30 * 24 * 60 * 60);
     Map<String, Object> data = Map.of("cart", cart);
     return ResponseEntity.ok(new ApiResponse("Cập nhật giỏ hàng thành công", data));
+  }
+
+  @DeleteMapping("cart-items/variants/{variantId}")
+  public ResponseEntity<ApiResponse> guestDeleteFromCart(@AuthenticationPrincipal CustomUserDetails userDetails,
+      HttpServletRequest request, @PathVariable String variantId, HttpServletResponse response) {
+    if (userDetails != null) {
+      return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ApiResponse("Bạn không có quyền truy cập", null));
+    }
+    String token = extractGuestTokenFromCookie(request);
+    if (token == null) {
+      return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ApiResponse("Bạn không có quyền truy cập", null));
+    }
+    String guestId = jwtService.extractGuestId(token);
+    GuestCartResponse cart = guestService.guestDeleteFromCart(guestId, variantId);
+    String guestToken = jwtService.generateGuestToken(guestId);
+    setTokenCookie(response, guestTokenName, guestToken, apiPrefix + "/guest", 30 * 24 * 60 * 60);
+    Map<String, Object> data = Map.of("cart", cart);
+    return ResponseEntity.ok(new ApiResponse("Xóa sản phẩm khỏi giỏ hàng thành công", data));
   }
 
   @PostMapping("/orders")

@@ -39,6 +39,19 @@ public class GuestServiceImpl implements GuestService {
 
   @Override
   @Transactional
+  public GuestCartResponse guestGetCart(String guestId) {
+    String redisKey = redisService.setKey(guestId, ":guest:");
+    Set<GuestCartItemDto> cartItems;
+    try {
+      cartItems = (Set<GuestCartItemDto>) redisService.getObject(redisKey);
+    } catch (NotFoundException e) {
+      cartItems = new HashSet<>();
+    }
+    return buildGuestCartResponse(cartItems);
+  }
+
+  @Override
+  @Transactional
   public GuestCartResponse guestAddToCart(String guestId, AddItemToCartRequest request) {
     String redisKey = redisService.setKey(guestId, ":guest:");
     Set<GuestCartItemDto> cartItems;
@@ -68,7 +81,12 @@ public class GuestServiceImpl implements GuestService {
   @Transactional
   public GuestCartResponse guestUpdateInCart(String guestId, String variantId, UpdateItemInCartRequest request) {
     String redisKey = redisService.setKey(guestId, ":guest:");
-    Set<GuestCartItemDto> cartItems = (Set<GuestCartItemDto>) redisService.getObject(redisKey);
+    Set<GuestCartItemDto> cartItems;
+    try {
+      cartItems = (Set<GuestCartItemDto>) redisService.getObject(redisKey);
+    } catch (NotFoundException e) {
+      throw new ConflictException("Chưa có giỏ hàng");
+    }
     if (cartItems == null || cartItems.isEmpty()) {
       throw new ConflictException("Giỏ hàng trống");
     }
@@ -86,6 +104,32 @@ public class GuestServiceImpl implements GuestService {
     return buildGuestCartResponse(cartItems);
   }
 
+  @Override
+  @Transactional
+  public GuestCartResponse guestDeleteFromCart(String guestId, String variantId) {
+    String redisKey = redisService.setKey(guestId, ":guest:");
+    Set<GuestCartItemDto> cartItems;
+    try {
+      cartItems = (Set<GuestCartItemDto>) redisService.getObject(redisKey);
+    } catch (NotFoundException e) {
+      throw new ConflictException("Chưa có giỏ hàng");
+    }
+    if (cartItems == null || cartItems.isEmpty()) {
+      throw new ConflictException("Giỏ hàng trống");
+    }
+
+    boolean removed = cartItems.removeIf(item -> item.getVariantId().equals(variantId));
+    if (!removed) {
+      throw new NotFoundException("Không tìm thấy sản phẩm trong giỏ hàng");
+    }
+    if (cartItems.isEmpty()) {
+      redisService.deleteObject(redisKey);
+    } else {
+      redisService.saveObject(redisKey, cartItems, guestTokenExpirationDays, TimeUnit.DAYS);
+    }
+    return buildGuestCartResponse(cartItems);
+  }
+
   private GuestCartResponse buildGuestCartResponse(Set<GuestCartItemDto> cartItems) {
     Set<BaseCartItemResponse> itemResponses = new HashSet<>();
     int totalQuantity = 0;
@@ -93,7 +137,7 @@ public class GuestServiceImpl implements GuestService {
 
     for (GuestCartItemDto dto : cartItems) {
       VariantEntity variant = variantRepository.findById(dto.getVariantId())
-          .orElseThrow(() -> new NotFoundException("Không tìm thấy biến thể"));
+          .orElseThrow(() -> new NotFoundException("Không tìm thấy biến thể sản phẩm"));
 
       ProductEntity product = variant.getProduct();
       BigDecimal unitPrice = product.isSaleProduct() ? product.getSalePrice() : product.getPrice();
