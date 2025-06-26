@@ -10,8 +10,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.store.backend.cart.request.AddItemToCartRequest;
-import com.store.backend.cart.response.CartItemResponse;
+import com.store.backend.cart.request.UpdateItemInCartRequest;
+import com.store.backend.cart.response.BaseCartItemResponse;
 import com.store.backend.color.response.BaseColorResponse;
+import com.store.backend.exception.ConflictException;
 import com.store.backend.exception.NotFoundException;
 import com.store.backend.guest.GuestService;
 import com.store.backend.guest.dto.GuestCartItemDto;
@@ -43,11 +45,8 @@ public class GuestServiceImpl implements GuestService {
     try {
       cartItems = (Set<GuestCartItemDto>) redisService.getObject(redisKey);
     } catch (NotFoundException e) {
-      System.out.println("Không có khóa");
       cartItems = new HashSet<>();
     }
-
-    System.out.println("Giỏ hàng ban đầu: " + cartItems);
 
     GuestCartItemDto newItem = GuestCartItemDto.builder().variantId(request.getVariantId())
         .quantity(request.getQuantity()).build();
@@ -61,14 +60,34 @@ public class GuestServiceImpl implements GuestService {
       cartItems.add(newItem);
     }
 
-    System.out.println("Giỏ hàng trước khi lưu vào redis" + cartItems);
+    redisService.saveObject(redisKey, cartItems, guestTokenExpirationDays, TimeUnit.DAYS);
+    return buildGuestCartResponse(cartItems);
+  }
+
+  @Override
+  @Transactional
+  public GuestCartResponse guestUpdateInCart(String guestId, String variantId, UpdateItemInCartRequest request) {
+    String redisKey = redisService.setKey(guestId, ":guest:");
+    Set<GuestCartItemDto> cartItems = (Set<GuestCartItemDto>) redisService.getObject(redisKey);
+    if (cartItems == null || cartItems.isEmpty()) {
+      throw new ConflictException("Giỏ hàng trống");
+    }
+
+    Optional<GuestCartItemDto> existingItem = cartItems.stream()
+        .filter(item -> item.getVariantId().equals(variantId))
+        .findFirst();
+    if (existingItem.isPresent()) {
+      existingItem.get().setQuantity(request.getQuantity());
+    } else {
+      throw new NotFoundException("Không tìm thấy sản phẩm trong giỏ hàng");
+    }
 
     redisService.saveObject(redisKey, cartItems, guestTokenExpirationDays, TimeUnit.DAYS);
     return buildGuestCartResponse(cartItems);
   }
 
   private GuestCartResponse buildGuestCartResponse(Set<GuestCartItemDto> cartItems) {
-    Set<CartItemResponse> itemResponses = new HashSet<>();
+    Set<BaseCartItemResponse> itemResponses = new HashSet<>();
     int totalQuantity = 0;
     BigDecimal totalPrice = BigDecimal.ZERO;
 
@@ -98,7 +117,7 @@ public class GuestServiceImpl implements GuestService {
           .inStock(variant.isInStock())
           .build();
 
-      CartItemResponse itemResponse = CartItemResponse.builder()
+      BaseCartItemResponse itemResponse = BaseCartItemResponse.builder()
           .variant(variantResponse)
           .quantity(dto.getQuantity())
           .unitPrice(unitPrice)
