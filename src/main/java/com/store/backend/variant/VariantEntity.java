@@ -33,7 +33,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@Table(name = "variants", uniqueConstraints = @UniqueConstraint(columnNames = "sku"))
+@Table(name = "variants", uniqueConstraints = @UniqueConstraint(columnNames = "sku", name = "variants_sku_key"))
 public class VariantEntity extends BaseEntity {
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)

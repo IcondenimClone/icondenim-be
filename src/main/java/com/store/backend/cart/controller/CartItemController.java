@@ -13,31 +13,34 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.store.backend.cart.entity.CartItemEntity;
-import com.store.backend.cart.mapper.CartItemMapper;
+import com.store.backend.cart.entity.CartEntity;
+import com.store.backend.cart.mapper.CartMapper;
 import com.store.backend.cart.request.AddItemToCartRequest;
 import com.store.backend.cart.request.UpdateItemInCartRequest;
-import com.store.backend.cart.response.CartItemResponse;
+import com.store.backend.cart.response.CartResponse;
 import com.store.backend.cart.service.CartItemService;
 import com.store.backend.common.ApiResponse;
 import com.store.backend.user.customs.CustomUserDetails;
 
 import jakarta.validation.Valid;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/cart-items")
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class CartItemController {
-  private final CartItemService cartItemService;
-  private final CartItemMapper cartItemMapper;
+  CartItemService cartItemService;
+  CartMapper cartMapper;
 
   @PostMapping
   public ResponseEntity<ApiResponse> addItemToCart(@AuthenticationPrincipal CustomUserDetails userDetails,
       @Valid @RequestBody AddItemToCartRequest request) {
-    CartItemEntity cartItem = cartItemService.addItemToCart(userDetails.getId(), request);
-    CartItemResponse convertedCartItem = cartItemMapper.entityToResponse(cartItem);
-    Map<String, Object> data = Map.of("cartItem", convertedCartItem);
+    CartEntity cart = cartItemService.addItemToCart(userDetails.getId(), request);
+    CartResponse convertedCart = cartMapper.entityToResponse(cart);
+    Map<String, Object> data = Map.of("cart", convertedCart);
     return ResponseEntity.status(HttpStatus.CREATED)
         .body(new ApiResponse("Thêm mặt hàng vào giỏ hàng thành công", data));
   }
@@ -45,15 +48,17 @@ public class CartItemController {
   @PutMapping("/{id}")
   public ResponseEntity<ApiResponse> updateItemInCart(@AuthenticationPrincipal CustomUserDetails userDetails, @PathVariable String id,
       @Valid @RequestBody UpdateItemInCartRequest request) {
-    CartItemEntity cart = cartItemService.updateItemInCart(id, userDetails.getId(), request);
-    CartItemResponse convertedCartItem = cartItemMapper.entityToResponse(cart);
-    Map<String, Object> data = Map.of("cartItem", convertedCartItem);
+    CartEntity cart = cartItemService.updateItemInCart(id, userDetails.getId(), request);
+    CartResponse convertedCart = cartMapper.entityToResponse(cart);
+    Map<String, Object> data = Map.of("cart", convertedCart);
     return ResponseEntity.ok(new ApiResponse("Cập nhật mặt hàng trong giỏ hàng thành công", data));
   }
 
   @DeleteMapping("/{id}")
   public ResponseEntity<ApiResponse> removeItemFromCart(@AuthenticationPrincipal CustomUserDetails userDetails,  @PathVariable String id) {
-    cartItemService.removeItemFromCart(id, userDetails.getId());
-    return ResponseEntity.ok(new ApiResponse("Xóa mặt hàng khỏi giỏ hàng thành công", null));
+    CartEntity cart = cartItemService.removeItemFromCart(id, userDetails.getId());
+    CartResponse convertedCart = cartMapper.entityToResponse(cart);
+    Map<String, Object> data = Map.of("cart", convertedCart);
+    return ResponseEntity.ok(new ApiResponse("Xóa mặt hàng khỏi giỏ hàng thành công", data));
   }
 }

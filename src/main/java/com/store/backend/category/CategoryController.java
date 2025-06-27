@@ -22,14 +22,17 @@ import com.store.backend.category.response.CategoryResponse;
 import com.store.backend.common.ApiResponse;
 
 import jakarta.validation.Valid;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/collections")
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class CategoryController {
-  private final CategoryService categoryService;
-  private final CategoryMapper categoryMapper;
+  CategoryService categoryService;
+  CategoryMapper categoryMapper;
 
   @PostMapping
   @PreAuthorize("hasRole('ROLE_ADMIN')")

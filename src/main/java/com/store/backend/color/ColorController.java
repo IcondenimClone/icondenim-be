@@ -19,13 +19,16 @@ import com.store.backend.color.response.ColorResponse;
 import com.store.backend.common.ApiResponse;
 
 import jakarta.validation.Valid;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/colors")
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ColorController {
-  private final ColorService colorService;
+  ColorService colorService;
 
   @PostMapping
   @PreAuthorize("hasRole('ROLE_ADMIN')")

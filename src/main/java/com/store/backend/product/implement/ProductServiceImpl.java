@@ -19,15 +19,16 @@ import com.store.backend.product.request.CreateProductRequest;
 import com.store.backend.product.request.UpdateProductRequest;
 
 import jakarta.transaction.Transactional;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import lombok.experimental.FieldDefaults;
 
 @Service
 @RequiredArgsConstructor
-@Slf4j
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ProductServiceImpl implements ProductService {
-  private final ProductRepository productRepository;
-  private final CategoryRepository categoryRepository;
+  ProductRepository productRepository;
+  CategoryRepository categoryRepository;
 
   @Override
   @Transactional
@@ -42,32 +43,38 @@ public class ProductServiceImpl implements ProductService {
       throw new BadRequestException("Có ID danh mục không hợp lệ");
     }
 
+    LocalDate reqStartSale = request.getStartSale();
+    LocalDate reqEndSale = request.getEndSale();
+    BigDecimal reqSalePrice = request.getSalePrice();
     if (request.isSaleProduct()) {
-      if (request.getSalePrice() == null) {
+      if (reqSalePrice == null) {
         throw new BadRequestException("Vui lòng nhập giá khuyến mãi");
       }
-      if (request.getSalePrice().compareTo(request.getPrice()) > 0) {
+      if (reqSalePrice.compareTo(request.getPrice()) > 0) {
         throw new BadRequestException("Giá khuyến mãi phải nhỏ hơn giá gốc");
       }
-      if (request.getStartSale() == null && request.getEndSale() == null) {
+      if (reqStartSale == null && reqEndSale == null) {
         throw new BadRequestException("Vui lòng nhập ngày bắt đầu và kết thúc khuyến mãi");
       }
-      if (request.getEndSale() == null) {
+      if (reqEndSale == null) {
         throw new BadRequestException("Vui lòng nhập ngày kết thúc khuyến mãi");
       }
 
       LocalDate today = LocalDate.now();
-      if (request.getStartSale() != null && request.getStartSale().isBefore(today)) {
+      if (reqStartSale != null && reqStartSale.isBefore(today)) {
         throw new BadRequestException("Thời gian bắt đầu sale không được nhỏ hơn hôm nay");
       }
-      if (!request.getEndSale().isAfter(today)) {
+      if (!reqEndSale.isAfter(today)) {
         throw new BadRequestException("Ngày kết thúc khuyến mãi phải lớn hơn hôm nay ít nhất 1 ngày");
       }
-      if (request.getStartSale() == null && request.getEndSale() != null) {
+      if (reqStartSale == null && reqEndSale != null) {
         request.setStartSale(today);
       }
+      if (reqStartSale != null && reqEndSale != null && !reqStartSale.isBefore(reqEndSale)) {
+        throw new BadRequestException("Ngày bắt đầu khuyến mãi phải trước ngày kết thúc");
+      }
     } else {
-      if (request.getSalePrice() != null) {
+      if (reqSalePrice != null) {
         throw new BadRequestException("Không có khuyến mãi nên không thể nhập giá khuyến mãi");
       }
       if (request.getEndSale() != null) {

@@ -29,7 +29,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@Table(name = "categories", uniqueConstraints = @UniqueConstraint(columnNames = "slug"))
+@Table(name = "categories", uniqueConstraints = @UniqueConstraint(columnNames = "slug", name = "categories_slug_key"))
 public class CategoryEntity extends BaseEntity {
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)

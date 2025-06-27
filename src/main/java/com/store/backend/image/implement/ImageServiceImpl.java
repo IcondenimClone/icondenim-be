@@ -17,14 +17,17 @@ import com.store.backend.product.ProductEntity;
 import com.store.backend.product.ProductRepository;
 
 import jakarta.transaction.Transactional;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 
 @Service
 @RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ImageServiceImpl implements ImageService {
-  private final ImageRepository imageRepository;
-  private final ProductRepository productRepository;
-  private final ColorRepository colorRepository;
+  ImageRepository imageRepository;
+  ProductRepository productRepository;
+  ColorRepository colorRepository;
 
   @Override
   @Transactional

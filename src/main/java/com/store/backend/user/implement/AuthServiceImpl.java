@@ -34,17 +34,20 @@ import com.store.backend.user.request.VerifySignUpRequest;
 import com.store.backend.user.service.AuthService;
 
 import jakarta.transaction.Transactional;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 
 @Service
 @RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class AuthServiceImpl implements AuthService {
-  private final UserRepository userRepository;
-  private final PasswordEncoder passwordEncoder;
-  private final CartService cartService;
-  private final AuthenticationManager authenticationManager;
-  private final EmailService emailService;
-  private final RedisService redisService;
+  UserRepository userRepository;
+  PasswordEncoder passwordEncoder;
+  CartService cartService;
+  AuthenticationManager authenticationManager;
+  EmailService emailService;
+  RedisService redisService;
 
   @Override
   public String signUp(SignUpRequest request) {

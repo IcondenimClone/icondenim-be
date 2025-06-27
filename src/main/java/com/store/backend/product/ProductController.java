@@ -22,14 +22,17 @@ import com.store.backend.product.request.UpdateProductRequest;
 import com.store.backend.product.response.ProductResponse;
 
 import jakarta.validation.Valid;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/products")
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ProductController {
-  private final ProductService productService;
-  private final ProductMapper productMapper;
+  ProductService productService;
+  ProductMapper productMapper;
 
   @PostMapping
   @PreAuthorize("hasRole('ROLE_ADMIN')")

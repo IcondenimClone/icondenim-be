@@ -21,14 +21,17 @@ import com.store.backend.order.service.OrderService;
 import com.store.backend.user.customs.CustomUserDetails;
 
 import jakarta.validation.Valid;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/orders")
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class OrderController {
-  private final OrderService orderService;
-  private final OrderMapper orderMapper;
+  OrderService orderService;
+  OrderMapper orderMapper;
 
   @PostMapping
   public ResponseEntity<ApiResponse> placeOrder(@AuthenticationPrincipal CustomUserDetails userDetails,

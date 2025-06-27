@@ -20,14 +20,17 @@ import com.store.backend.variant.request.UpdateVariantRequest;
 import com.store.backend.variant.response.VariantResponse;
 
 import jakarta.validation.Valid;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/variants")
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class VariantController {
-  private final VariantService variantService;
-  private final VariantMapper variantMapper;
+  VariantService variantService;
+  VariantMapper variantMapper;
 
   @PostMapping
   @PreAuthorize("hasAuthority('ROLE_ADMIN')")

@@ -1,6 +1,5 @@
 package com.store.backend.cart.service;
 
-import java.math.BigDecimal;
 import java.util.Optional;
 import java.util.Set;
 
@@ -10,24 +9,29 @@ import com.store.backend.cart.entity.CartEntity;
 import com.store.backend.cart.entity.CartItemEntity;
 import com.store.backend.cart.repository.CartRepository;
 import com.store.backend.exception.AlreadyExistsException;
+import com.store.backend.exception.ForbiddenException;
 import com.store.backend.exception.NotFoundException;
 import com.store.backend.guest.dto.GuestCartItemDto;
 import com.store.backend.redis.RedisService;
 import com.store.backend.user.UserEntity;
 import com.store.backend.user.UserRepository;
+import com.store.backend.user.enums.UserRole;
 import com.store.backend.variant.VariantEntity;
 import com.store.backend.variant.VariantRepository;
 
 import jakarta.transaction.Transactional;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 
 @Service
 @RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class CartServiceImpl implements CartService {
-  private final CartRepository cartRepository;
-  private final UserRepository userRepository;
-  private final RedisService redisService;
-  private final VariantRepository variantRepository;
+  CartRepository cartRepository;
+  UserRepository userRepository;
+  RedisService redisService;
+  VariantRepository variantRepository;
 
   @Override
   public CartEntity getCart(String userId) {
@@ -39,8 +43,11 @@ public class CartServiceImpl implements CartService {
   public void createDefaultCart(String userId) {
     UserEntity user = userRepository.findById(userId)
         .orElseThrow(() -> new NotFoundException("Không tìm thấy người dùng"));
+    if (!user.getRole().equals(UserRole.USER)) {
+      throw new ForbiddenException("Không có quyền tạo giỏ hàng");
+    }
     if (cartRepository.existsByUserId(userId)) {
-      throw new AlreadyExistsException("Giỏ hàng đã tồn tại");
+      throw new AlreadyExistsException("Người dùng đã có giỏ hàng");
     }
     CartEntity newCart = CartEntity.builder().user(user).build();
     cartRepository.save(newCart);
