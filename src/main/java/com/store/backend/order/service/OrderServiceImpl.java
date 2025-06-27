@@ -104,7 +104,8 @@ public class OrderServiceImpl implements OrderService {
       variantRepository.save(variant);
 
       OrderItemEntity newOrderItem = OrderItemEntity.builder().order(newOrder).variant(variant)
-          .quantity(item.getQuantity()).unitPrice(item.getUnitPrice()).build();
+          .quantity(item.getQuantity()).build();
+      newOrderItem.setUnitPrice();
       newOrderItem.setTotalPrice();
       return newOrderItem;
     }).toList();

@@ -181,11 +181,9 @@ public class GuestServiceImpl implements GuestService {
       variant.setStock();
       variantRepository.save(variant);
 
-      BigDecimal itemPrice = variant.getProduct().isSaleProduct() ? variant.getProduct().getSalePrice()
-          : variant.getProduct().getPrice();
-
       OrderItemEntity orderItem = OrderItemEntity.builder().order(newOrder).variant(variant)
-          .quantity(item.getQuantity()).unitPrice(itemPrice).build();
+          .quantity(item.getQuantity()).build();
+      orderItem.setUnitPrice();
       orderItem.setTotalPrice();
       return orderItem;
     }).toList();

@@ -2,10 +2,9 @@ package com.store.backend.cart.controller;
 
 import java.util.Map;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -25,11 +24,19 @@ public class CartController {
   private final CartService cartService;
   private final CartMapper cartMapper;
 
-  @PostMapping("/default")
-  public ResponseEntity<ApiResponse> createDefaultCart(@AuthenticationPrincipal CustomUserDetails userDetails) {
-    CartEntity cart = cartService.createDefaultCart(userDetails.getId());
+  @GetMapping
+  public ResponseEntity<ApiResponse> getCart(@AuthenticationPrincipal CustomUserDetails userDetails) {
+    CartEntity cart = cartService.getCart(userDetails.getId());
     CartResponse convertedCart = cartMapper.entityToResponse(cart);
     Map<String, Object> data = Map.of("cart", convertedCart);
-    return ResponseEntity.status(HttpStatus.CREATED).body(new ApiResponse("Tạo giỏ hàng mặc định thành công", data));
+    return ResponseEntity.ok(new ApiResponse("Lấy giỏ hàng thành công", data));
   }
+
+  // @PostMapping("/default")
+  // public ResponseEntity<ApiResponse> createDefaultCart(@AuthenticationPrincipal CustomUserDetails userDetails) {
+  //   CartEntity cart = cartService.createDefaultCart(userDetails.getId());
+  //   CartResponse convertedCart = cartMapper.entityToResponse(cart);
+  //   Map<String, Object> data = Map.of("cart", convertedCart);
+  //   return ResponseEntity.status(HttpStatus.CREATED).body(new ApiResponse("Tạo giỏ hàng mặc định thành công", data));
+  // }
 }
