@@ -25,17 +25,20 @@ import com.store.backend.variant.VariantEntity;
 import com.store.backend.variant.VariantRepository;
 
 import jakarta.transaction.Transactional;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 
 @Service
 @RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class OrderServiceImpl implements OrderService {
-  private final OrderRepository orderRepository;
-  private final UserRepository userRepository;
-  private final VariantRepository variantRepository;
-  private final CartRepository cartRepository;
-  private final RedisService redisService;
-  private final EmailService emailService;
+  OrderRepository orderRepository;
+  UserRepository userRepository;
+  VariantRepository variantRepository;
+  CartRepository cartRepository;
+  RedisService redisService;
+  EmailService emailService;
 
   @Override
   @Transactional

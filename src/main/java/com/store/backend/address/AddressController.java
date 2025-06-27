@@ -11,7 +11,9 @@ import com.store.backend.common.ApiResponse;
 import com.store.backend.user.customs.CustomUserDetails;
 
 import jakarta.validation.Valid;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 
 import java.util.HashMap;
 import java.util.List;
@@ -30,9 +32,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/addresses")
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class AddressController {
-  private final AddressService addressService;
-  private final AddressMapper addressMapper;
+  AddressService addressService;
+  AddressMapper addressMapper;
 
   @PostMapping("/my")
   public ResponseEntity<ApiResponse> addUserAddress(@AuthenticationPrincipal CustomUserDetails userDetails,

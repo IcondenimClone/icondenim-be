@@ -19,14 +19,17 @@ import com.store.backend.image.request.UpdateImageRequest;
 import com.store.backend.image.response.ImageResponse;
 
 import jakarta.validation.Valid;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/images")
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ImageController {
-  private final ImageService imageService;
-  private final ImageMapper imageMapper;
+  ImageService imageService;
+  ImageMapper imageMapper;
 
   @PostMapping
   @PreAuthorize("hasRole('ROLE_ADMIN')")

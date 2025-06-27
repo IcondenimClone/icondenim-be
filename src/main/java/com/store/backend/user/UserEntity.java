@@ -34,8 +34,8 @@ import lombok.Setter;
 @AllArgsConstructor
 @Builder
 @Table(name = "users", uniqueConstraints = {
-    @UniqueConstraint(columnNames = "username"),
-    @UniqueConstraint(columnNames = "email")
+    @UniqueConstraint(columnNames = "username", name = "users_username_key"),
+    @UniqueConstraint(columnNames = "email", name = "users_email_key")
 })
 public class UserEntity extends BaseEntity {
   @Id

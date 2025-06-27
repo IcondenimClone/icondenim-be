@@ -14,18 +14,21 @@ import com.store.backend.variant.VariantEntity;
 import com.store.backend.variant.VariantRepository;
 
 import jakarta.transaction.Transactional;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 
 @Service
 @RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class CartItemServiceImpl implements CartItemService {
-  private final CartItemRepository cartItemRepository;
-  private final CartRepository cartRepository;
-  private final VariantRepository variantRepository;
+  CartItemRepository cartItemRepository;
+  CartRepository cartRepository;
+  VariantRepository variantRepository;
 
   @Override
   @Transactional
-  public CartItemEntity addItemToCart(String userId, AddItemToCartRequest request) {
+  public CartEntity addItemToCart(String userId, AddItemToCartRequest request) {
     CartEntity cart = cartRepository.findByUserId(userId)
         .orElseThrow(() -> new NotFoundException("Người dùng chưa có giỏ hàng"));
     VariantEntity variant = variantRepository.findById(request.getVariantId())
@@ -42,12 +45,14 @@ public class CartItemServiceImpl implements CartItemService {
       cartItem.setTotalPrice();
       cart.addItem(cartItem);
     }
-    return cartItemRepository.save(cartItem);
+    cart.recalculateCart();
+    
+    return cartRepository.save(cart);
   }
 
   @Override
   @Transactional
-  public CartItemEntity updateItemInCart(String id, String userId, UpdateItemInCartRequest request) {
+  public CartEntity updateItemInCart(String id, String userId, UpdateItemInCartRequest request) {
     CartItemEntity cartItem = cartItemRepository.findById(id)
         .orElseThrow(() -> new NotFoundException("Mặt hàng trong giỏ hàng không tồn tại"));
     if (!cartItem.getCart().getUser().getId().equals(userId)) {
@@ -60,11 +65,11 @@ public class CartItemServiceImpl implements CartItemService {
     CartEntity cart = cartItem.getCart();
     cart.recalculateCart();
 
-    return cartItemRepository.save(cartItem);
+    return cartRepository.save(cart);
   }
 
   @Override
-  public void removeItemFromCart(String id, String userId) {
+  public CartEntity removeItemFromCart(String id, String userId) {
     CartItemEntity cartItem = cartItemRepository.findById(id)
         .orElseThrow(() -> new NotFoundException("Mặt hàng trong giỏ hàng không tồn tại"));
     if (!cartItem.getCart().getUser().getId().equals(userId)) {
@@ -72,6 +77,6 @@ public class CartItemServiceImpl implements CartItemService {
     }
     CartEntity cart = cartItem.getCart();
     cart.removeItem(cartItem);
-    cartRepository.save(cart);
+    return cartRepository.save(cart);
   }
 }

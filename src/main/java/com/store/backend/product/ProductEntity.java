@@ -38,7 +38,7 @@ import lombok.Setter;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(name = "products", uniqueConstraints = @UniqueConstraint(columnNames = "slug"))
+@Table(name = "products", uniqueConstraints = @UniqueConstraint(columnNames = "slug", name = "products_slug_key"))
 public class ProductEntity extends BaseEntity {
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)

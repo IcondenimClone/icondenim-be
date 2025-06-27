@@ -9,13 +9,15 @@ import org.springframework.transaction.annotation.Transactional;
 import com.store.backend.user.UserEntity;
 import com.store.backend.user.UserRepository;
 
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 
 @Service
 @RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class CustomUserDetailsService implements UserDetailsService {
-
-  private final UserRepository userRepository;
+  UserRepository userRepository;
 
   @Override
   @Transactional(readOnly = true)

@@ -30,7 +30,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@Table(name = "carts", uniqueConstraints = @UniqueConstraint(columnNames = "user_id"))
+@Table(name = "carts", uniqueConstraints = @UniqueConstraint(columnNames = "user_id", name = "carts_user_id_key"))
 public class CartEntity extends BaseEntity {
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)

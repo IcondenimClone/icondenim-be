@@ -12,14 +12,15 @@ import com.store.backend.exception.AlreadyExistsException;
 import com.store.backend.exception.NotFoundException;
 
 import jakarta.transaction.Transactional;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import lombok.experimental.FieldDefaults;
 
 @Service
 @RequiredArgsConstructor
-@Slf4j
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ColorServiceImpl implements ColorService {
-  private final ColorRepository colorRepository;
+  ColorRepository colorRepository;
 
   @Override
   @Transactional

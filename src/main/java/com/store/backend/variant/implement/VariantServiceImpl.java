@@ -18,15 +18,18 @@ import com.store.backend.variant.request.CreateVariantRequest;
 import com.store.backend.variant.request.UpdateVariantRequest;
 
 import jakarta.transaction.Transactional;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 
 @Service
 @RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class VariantServiceImpl implements VariantService {
-  private final VariantRepository variantRepository;
-  private final ProductRepository productRepository;
-  private final ColorRepository colorRepository;
-  private final SizeRepository sizeRepository;
+  VariantRepository variantRepository;
+  ProductRepository productRepository;
+  ColorRepository colorRepository;
+  SizeRepository sizeRepository;
 
   @Override
   @Transactional
