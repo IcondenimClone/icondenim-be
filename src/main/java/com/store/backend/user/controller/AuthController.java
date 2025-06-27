@@ -34,7 +34,6 @@ import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -75,8 +74,8 @@ public class AuthController {
     String accessToken = jwtService.generateAccessToken(userId, role);
     String refreshToken = jwtService.generateRefreshToken(userId, role);
 
-    setTokenCookie(response, accessTokenName, accessToken, "/", 15 * 60);
-    setTokenCookie(response, refreshTokenName, refreshToken, apiPrefix + "/auth/refresh", 7 * 24 * 60 * 60);
+    jwtService.setTokenCookie(response, accessTokenName, accessToken, "/", 15 * 60);
+    jwtService.setTokenCookie(response, refreshTokenName, refreshToken, apiPrefix + "/auth/refresh", 7 * 24 * 60 * 60);
 
     AuthResponse convertedUser = userMapper.entityToAuthResponse(user);
     Map<String, Object> data = createAuthResponse(convertedUser);
@@ -93,8 +92,8 @@ public class AuthController {
     String accessToken = jwtService.generateAccessToken(userId, role);
     String refreshToken = jwtService.generateRefreshToken(userId, role);
 
-    setTokenCookie(response, accessTokenName, accessToken, "/", 15 * 60);
-    setTokenCookie(response, refreshTokenName, refreshToken, apiPrefix + "/auth/refresh", 7 * 24 * 60 * 60);
+    jwtService.setTokenCookie(response, accessTokenName, accessToken, "/", 15 * 60);
+    jwtService.setTokenCookie(response, refreshTokenName, refreshToken, apiPrefix + "/auth/refresh", 7 * 24 * 60 * 60);
 
     AuthResponse convertedUser = userMapper.entityToAuthResponse(user);
     Map<String, Object> data = createAuthResponse(convertedUser);
@@ -108,8 +107,8 @@ public class AuthController {
       return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ApiResponse("Bạn chưa đăng nhập", null));
     }
 
-    clearTokenCookie(response, accessTokenName, "/");
-    clearTokenCookie(response, refreshTokenName, apiPrefix + "/auth/refresh");
+    jwtService.clearTokenCookie(response, accessTokenName, "/");
+    jwtService.clearTokenCookie(response, refreshTokenName, apiPrefix + "/auth/refresh");
 
     return ResponseEntity.ok(new ApiResponse("Đăng xuất thành công", null));
   }
@@ -129,7 +128,7 @@ public class AuthController {
 
   @GetMapping("/refresh")
   public ResponseEntity<ApiResponse> refreshToken(HttpServletRequest request, HttpServletResponse response) {
-    String token = extractRefreshTokenFromCookie(request);
+    String token = jwtService.extractTokenFromCookie(request, refreshTokenName);
     if (token == null) {
       return ResponseEntity.status(HttpStatus.BAD_REQUEST)
           .body(new ApiResponse("Không tìm thấy refresh token", null));
@@ -148,8 +147,8 @@ public class AuthController {
     String accessToken = jwtService.generateAccessToken(userId, role);
     String refreshToken = jwtService.generateRefreshToken(userId, role);
 
-    setTokenCookie(response, accessTokenName, accessToken, "/", 15 * 60);
-    setTokenCookie(response, refreshTokenName, refreshToken, apiPrefix + "/auth/refresh", 7 * 24 * 60 * 60);
+    jwtService.setTokenCookie(response, accessTokenName, accessToken, "/", 15 * 60);
+    jwtService.setTokenCookie(response, refreshTokenName, refreshToken, apiPrefix + "/auth/refresh", 7 * 24 * 60 * 60);
 
     return ResponseEntity.ok(new ApiResponse("Làm mới token thành công", null));
   }
@@ -180,8 +179,8 @@ public class AuthController {
     String accessToken = jwtService.generateAccessToken(userId, role);
     String refreshToken = jwtService.generateRefreshToken(userId, role);
 
-    setTokenCookie(response, accessTokenName, accessToken, "/", 15 * 60);
-    setTokenCookie(response, refreshTokenName, refreshToken, apiPrefix + "/auth/refresh", 7 * 24 * 60 * 60);
+    jwtService.setTokenCookie(response, accessTokenName, accessToken, "/", 15 * 60);
+    jwtService.setTokenCookie(response, refreshTokenName, refreshToken, apiPrefix + "/auth/refresh", 7 * 24 * 60 * 60);
 
     AuthResponse convertedUser = userMapper.entityToAuthResponse(user);
     Map<String, Object> data = createAuthResponse(convertedUser);
@@ -202,8 +201,8 @@ public class AuthController {
     String accessToken = jwtService.generateAccessToken(userId, role);
     String refreshToken = jwtService.generateRefreshToken(userId, role);
 
-    setTokenCookie(response, accessTokenName, accessToken, "/", 15 * 60);
-    setTokenCookie(response, refreshTokenName, refreshToken, apiPrefix + "/auth/refresh", 7 * 24 * 60 * 60);
+    jwtService.setTokenCookie(response, accessTokenName, accessToken, "/", 15 * 60);
+    jwtService.setTokenCookie(response, refreshTokenName, refreshToken, apiPrefix + "/auth/refresh", 7 * 24 * 60 * 60);
 
     AuthResponse convertedUser = userMapper.entityToAuthResponse(user);
     Map<String, Object> data = createAuthResponse(convertedUser);
@@ -227,34 +226,5 @@ public class AuthController {
     Map<String, Object> data = new HashMap<>();
     data.put("user", authResponse);
     return data;
-  }
-
-  private void setTokenCookie(HttpServletResponse response, String name, String value, String path, int maxAge) {
-    Cookie cookie = new Cookie(name, value);
-    cookie.setHttpOnly(true);
-    cookie.setSecure(false);
-    cookie.setPath(path);
-    cookie.setMaxAge(maxAge);
-    response.addCookie(cookie);
-  }
-
-  private void clearTokenCookie(HttpServletResponse response, String name, String path) {
-    Cookie cookie = new Cookie(name, null);
-    cookie.setHttpOnly(true);
-    cookie.setSecure(false);
-    cookie.setPath(path);
-    cookie.setMaxAge(0);
-    response.addCookie(cookie);
-  }
-
-  private String extractRefreshTokenFromCookie(HttpServletRequest request) {
-    if (request.getCookies() != null) {
-      for (Cookie cookie : request.getCookies()) {
-        if (refreshTokenName.equals(cookie.getName())) {
-          return cookie.getValue();
-        }
-      }
-    }
-    return null;
   }
 }

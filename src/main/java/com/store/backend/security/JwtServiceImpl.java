@@ -7,6 +7,9 @@ import com.store.backend.user.UserEntity;
 import com.store.backend.user.enums.UserRole;
 
 import io.jsonwebtoken.security.Keys;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import io.jsonwebtoken.Claims;
@@ -85,7 +88,7 @@ public class JwtServiceImpl implements JwtService {
     return extractClaim(token, Claims::getSubject);
   }
 
-  @Override 
+  @Override
   public String extractGuestId(String token) {
     return extractClaim(token, Claims::getSubject);
   }
@@ -100,6 +103,38 @@ public class JwtServiceImpl implements JwtService {
   public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
     Claims claims = extractAllClaims(token);
     return claimsResolver.apply(claims);
+  }
+
+  @Override
+  public String extractTokenFromCookie(HttpServletRequest request, String tokenName) {
+    if (request.getCookies() != null) {
+      for (Cookie cookie : request.getCookies()) {
+        if (tokenName.equals(cookie.getName())) {
+          return cookie.getValue();
+        }
+      }
+    }
+    return null;
+  }
+
+  @Override
+  public void setTokenCookie(HttpServletResponse response, String name, String value, String path, int maxAge) {
+    Cookie cookie = new Cookie(name, value);
+    cookie.setHttpOnly(true);
+    cookie.setSecure(false);
+    cookie.setPath(path);
+    cookie.setMaxAge(maxAge);
+    response.addCookie(cookie);
+  }
+
+  @Override
+  public void clearTokenCookie(HttpServletResponse response, String name, String path) {
+    Cookie cookie = new Cookie(name, null);
+    cookie.setHttpOnly(true);
+    cookie.setSecure(false);
+    cookie.setPath(path);
+    cookie.setMaxAge(0);
+    response.addCookie(cookie);
   }
 
   private boolean isTokenExpired(String token) {
