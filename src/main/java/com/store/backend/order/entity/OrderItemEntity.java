@@ -49,6 +49,14 @@ public class OrderItemEntity {
   @Column(nullable = false)
   private BigDecimal totalPrice;
 
+  public void setUnitPrice() {
+    if (this.variant.getProduct().getSalePrice() != null) {
+      this.unitPrice = this.variant.getProduct().getSalePrice();
+    } else {
+      this.unitPrice = this.variant.getProduct().getPrice();
+    }
+  }
+
   public void setTotalPrice() {
     this.totalPrice = this.unitPrice.multiply(BigDecimal.valueOf(this.quantity));
   }

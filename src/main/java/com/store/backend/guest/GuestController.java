@@ -39,9 +39,6 @@ public class GuestController {
   @Value("${jwt.guest-token-name}")
   private String guestTokenName;
 
-  @Value("${server.servlet.context-path}")
-  private String apiPrefix;
-
   private final GuestService guestService;
   private final OrderMapper orderMapper;
   private final JwtService jwtService;
@@ -77,7 +74,7 @@ public class GuestController {
     }
     GuestCartResponse cart = guestService.guestAddToCart(guestId, cliRequest);
     String guestToken = jwtService.generateGuestToken(guestId);
-    jwtService.setTokenCookie(response, guestTokenName, guestToken, apiPrefix + "/guest", 30 * 24 * 60 * 60);
+    jwtService.setTokenCookie(response, guestTokenName, guestToken, "/", 30 * 24 * 60 * 60);
     Map<String, Object> data = Map.of("cart", cart);
     return ResponseEntity.ok(new ApiResponse("Thêm vào giỏ hàng thành công", data));
   }
@@ -96,7 +93,7 @@ public class GuestController {
     String guestId = jwtService.extractGuestId(token);
     GuestCartResponse cart = guestService.guestUpdateInCart(guestId, variantId, cliRequest);
     String guestToken = jwtService.generateGuestToken(guestId);
-    jwtService.setTokenCookie(response, guestTokenName, guestToken, apiPrefix + "/guest", 30 * 24 * 60 * 60);
+    jwtService.setTokenCookie(response, guestTokenName, guestToken, "/", 30 * 24 * 60 * 60);
     Map<String, Object> data = Map.of("cart", cart);
     return ResponseEntity.ok(new ApiResponse("Cập nhật giỏ hàng thành công", data));
   }
@@ -114,7 +111,7 @@ public class GuestController {
     String guestId = jwtService.extractGuestId(token);
     GuestCartResponse cart = guestService.guestDeleteFromCart(guestId, variantId);
     String guestToken = jwtService.generateGuestToken(guestId);
-    jwtService.setTokenCookie(response, guestTokenName, guestToken, apiPrefix + "/guest", 30 * 24 * 60 * 60);
+    jwtService.setTokenCookie(response, guestTokenName, guestToken, "/", 30 * 24 * 60 * 60);
     Map<String, Object> data = Map.of("cart", cart);
     return ResponseEntity.ok(new ApiResponse("Xóa sản phẩm khỏi giỏ hàng thành công", data));
   }
@@ -134,7 +131,7 @@ public class GuestController {
     OrderResponse convertedOrder = orderMapper.entityToResponse(order);
     Map<String, Object> data = Map.of("order", convertedOrder);
     String guestToken = jwtService.generateGuestToken(guestId);
-    jwtService.setTokenCookie(response, guestTokenName, guestToken, apiPrefix + "/guest", 30 * 24 * 60 * 60);
+    jwtService.setTokenCookie(response, guestTokenName, guestToken, "/", 30 * 24 * 60 * 60);
     return ResponseEntity.status(HttpStatus.CREATED).body(new ApiResponse("Tạo đơn hàng thành công", data));
   }
 }
