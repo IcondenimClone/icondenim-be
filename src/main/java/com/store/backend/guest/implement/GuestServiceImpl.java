@@ -2,6 +2,7 @@ package com.store.backend.guest.implement;
 
 import java.math.BigDecimal;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -17,7 +18,12 @@ import com.store.backend.exception.ConflictException;
 import com.store.backend.exception.NotFoundException;
 import com.store.backend.guest.GuestService;
 import com.store.backend.guest.dto.GuestCartItemDto;
+import com.store.backend.guest.request.GuestOrderRequest;
 import com.store.backend.guest.response.GuestCartResponse;
+import com.store.backend.order.entity.OrderEntity;
+import com.store.backend.order.entity.OrderItemEntity;
+import com.store.backend.order.repository.OrderRepository;
+import com.store.backend.order.service.OrderService;
 import com.store.backend.product.ProductEntity;
 import com.store.backend.redis.RedisService;
 import com.store.backend.size.response.BaseSizeResponse;
@@ -36,6 +42,8 @@ public class GuestServiceImpl implements GuestService {
 
   private final RedisService redisService;
   private final VariantRepository variantRepository;
+  private final OrderService orderService;
+  private final OrderRepository orderRepository;
 
   @Override
   @Transactional
@@ -128,6 +136,59 @@ public class GuestServiceImpl implements GuestService {
       redisService.saveObject(redisKey, cartItems, guestTokenExpirationDays, TimeUnit.DAYS);
     }
     return buildGuestCartResponse(cartItems);
+  }
+
+  @Override
+  @Transactional
+  public OrderEntity placeGuestOrder(String guestId, GuestOrderRequest request) {
+    String redisKey = redisService.setKey(guestId, ":guest:");
+    Set<GuestCartItemDto> cartItems;
+    try {
+      cartItems = (Set<GuestCartItemDto>) redisService.getObject(redisKey);
+    } catch (NotFoundException e) {
+      throw new ConflictException("Chưa có giỏ hàng");
+    }
+    if (cartItems == null || cartItems.isEmpty()) {
+      throw new ConflictException("Giỏ hàng trống");
+    }
+
+    String shippingAddress = orderService.mergeAddress(request.getAddress(), request.getCommune(),
+        request.getDistrict(), request.getProvince());
+    OrderEntity newOrder = OrderEntity.builder().guestOrder(true).fullName(request.getFullName())
+        .phoneNumber(request.getPhoneNumber())
+        .shippingAddress(shippingAddress).paymentMethod(request.getPaymentMethod()).note(request.getNote()).build();
+
+    List<OrderItemEntity> orderItems = getOrderItems(cartItems, newOrder);
+    newOrder.setItems(new HashSet<>(orderItems));
+
+    int totalQuantity = orderItems.stream().mapToInt(OrderItemEntity::getQuantity).sum();
+    BigDecimal totalPrice = orderItems.stream().map(OrderItemEntity::getTotalPrice).reduce(BigDecimal.ZERO,
+        BigDecimal::add);
+    newOrder.setTotalQuantity(totalQuantity);
+    newOrder.setTotalPrice(totalPrice);
+
+    OrderEntity savedOrder = orderRepository.save(newOrder);
+    redisService.deleteObject(redisKey);
+    orderService.sendEmail(savedOrder, request.getEmail());
+    return savedOrder;
+  }
+
+  private List<OrderItemEntity> getOrderItems(Set<GuestCartItemDto> cartItems, OrderEntity newOrder) {
+    return cartItems.stream().map(item -> {
+      VariantEntity variant = variantRepository.findById(item.getVariantId())
+          .orElseThrow(() -> new NotFoundException("Không tìm thấy sản phẩm"));
+      variant.setQuantityPurchase(variant.getQuantityPurchase() + item.getQuantity());
+      variant.setStock();
+      variantRepository.save(variant);
+
+      BigDecimal itemPrice = variant.getProduct().isSaleProduct() ? variant.getProduct().getSalePrice()
+          : variant.getProduct().getPrice();
+
+      OrderItemEntity orderItem = OrderItemEntity.builder().order(newOrder).variant(variant)
+          .quantity(item.getQuantity()).unitPrice(itemPrice).build();
+      orderItem.setTotalPrice();
+      return orderItem;
+    }).toList();
   }
 
   private GuestCartResponse buildGuestCartResponse(Set<GuestCartItemDto> cartItems) {

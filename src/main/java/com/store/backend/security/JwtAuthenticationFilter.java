@@ -3,7 +3,6 @@ package com.store.backend.security;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -38,7 +37,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
   protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response,
       @NonNull FilterChain filterChain) throws ServletException, IOException {
 
-    String token = extractAccessTokenFromCookie(request);
+    String token = jwtService.extractTokenFromCookie(request, accessTokenName);
     if (token == null) {
       filterChain.doFilter(request, response);
       return;
@@ -63,16 +62,5 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     filterChain.doFilter(request, response);
-  }
-
-  private String extractAccessTokenFromCookie(HttpServletRequest request) {
-    if (request.getCookies() != null) {
-      for (Cookie cookie : request.getCookies()) {
-        if (accessTokenName.equals(cookie.getName())) {
-          return cookie.getValue();
-        }
-      }
-    }
-    return null;
   }
 }

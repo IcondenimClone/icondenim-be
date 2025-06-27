@@ -1,15 +1,11 @@
 package com.store.backend.guest.request;
 
-import java.util.Set;
-
 import com.store.backend.order.enums.PaymentMethod;
 
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -53,8 +49,4 @@ public class GuestOrderRequest {
   private PaymentMethod paymentMethod;
 
   private String note;
-
-  @Valid
-  @NotEmpty(message = "Yêu cầu mặt hàng")
-  Set<GuestCartItemRequest> items;
 }

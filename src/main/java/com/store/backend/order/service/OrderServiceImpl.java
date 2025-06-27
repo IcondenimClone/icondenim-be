@@ -12,7 +12,6 @@ import com.store.backend.cart.entity.CartEntity;
 import com.store.backend.cart.repository.CartRepository;
 import com.store.backend.exception.ConflictException;
 import com.store.backend.exception.NotFoundException;
-import com.store.backend.guest.request.GuestOrderRequest;
 import com.store.backend.order.entity.OrderEntity;
 import com.store.backend.order.entity.OrderItemEntity;
 import com.store.backend.order.enums.OrderStatus;
@@ -72,29 +71,6 @@ public class OrderServiceImpl implements OrderService {
   }
 
   @Override
-  @Transactional
-  public OrderEntity guestOrder(GuestOrderRequest request) {
-    String shippingAddress = mergeAddress(request.getAddress(), request.getCommune(), request.getDistrict(),
-        request.getProvince());
-    OrderEntity newOrder = OrderEntity.builder().guestOrder(true).fullName(request.getFullName())
-        .phoneNumber(request.getPhoneNumber())
-        .shippingAddress(shippingAddress).paymentMethod(request.getPaymentMethod()).note(request.getNote()).build();
-
-    List<OrderItemEntity> items = getOrderItemsForGuest(request, newOrder);
-    newOrder.setItems(new HashSet<>(items));
-
-    int totalQuantity = items.stream().mapToInt(OrderItemEntity::getQuantity).sum();
-    BigDecimal totalPrice = items.stream().map(OrderItemEntity::getTotalPrice).reduce(BigDecimal.ZERO, BigDecimal::add);
-    newOrder.setTotalQuantity(totalQuantity);
-    newOrder.setTotalPrice(totalPrice);
-
-    OrderEntity savedOrder = orderRepository.save(newOrder);
-    sendEmail(savedOrder, request.getEmail());
-
-    return savedOrder;
-  }
-
-  @Override
   public void confirmOrder(String token) {
     String redisKey = redisService.setKey(token, ":order:");
     String id = redisService.getString(redisKey);
@@ -109,7 +85,8 @@ public class OrderServiceImpl implements OrderService {
     redisService.deleteString(redisKey);
   }
 
-  private void sendEmail(OrderEntity savedOrder, String to) {
+  @Override
+  public void sendEmail(OrderEntity savedOrder, String to) {
     String confirmToken = UUID.randomUUID().toString();
     String confirmLink = "http://localhost:2004/icondenim-be/orders/confirm?token=" + confirmToken;
 
@@ -117,28 +94,6 @@ public class OrderServiceImpl implements OrderService {
 
     String redisKey = redisService.setKey(confirmToken, ":order:");
     redisService.saveString(redisKey, savedOrder.getId(), 1, TimeUnit.DAYS);
-  }
-
-  private List<OrderItemEntity> getOrderItemsForGuest(GuestOrderRequest request, OrderEntity newOrder) {
-    return request.getItems().stream().map(itemRequest -> {
-      VariantEntity variant = variantRepository.findById(itemRequest.getVariantId())
-          .orElseThrow(() -> new NotFoundException("Không tìm thấy sản phẩm"));
-      variant.setQuantityPurchase(variant.getQuantityPurchase() + itemRequest.getQuantity());
-      variant.setStock();
-      variantRepository.save(variant);
-
-      BigDecimal itemPrice = variant.getProduct().isSaleProduct() ? variant.getProduct().getSalePrice()
-          : variant.getProduct().getPrice();
-
-      OrderItemEntity orderItem = OrderItemEntity.builder()
-          .order(newOrder)
-          .variant(variant)
-          .quantity(itemRequest.getQuantity())
-          .unitPrice(itemPrice)
-          .build();
-      orderItem.setTotalPrice();
-      return orderItem;
-    }).toList();
   }
 
   private List<OrderItemEntity> getOrderItems(CartEntity cart, OrderEntity newOrder) {
@@ -155,7 +110,8 @@ public class OrderServiceImpl implements OrderService {
     }).toList();
   }
 
-  private String mergeAddress(String address, String commune, String district, String province) {
+  @Override
+  public String mergeAddress(String address, String commune, String district, String province) {
     return address + ", " + commune + ", " + district + ", " + province;
   }
 }
