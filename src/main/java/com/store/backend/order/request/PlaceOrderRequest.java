@@ -38,6 +38,9 @@ public class PlaceOrderRequest {
   @Size(max = 50, message = "Tỉnh/thành phố không vượt quá 50 ký tự")
   private String province;
 
+  @Size(max = 50, message = "Mã voucher không vượt quá 50 ký tự")
+  private String voucher;
+
   @Enumerated(EnumType.STRING)
   @NotNull(message = "Phương thức thanh toán là bắt buộc")
   private PaymentMethod paymentMethod;

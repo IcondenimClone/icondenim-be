@@ -30,6 +30,9 @@ import com.store.backend.size.response.BaseSizeResponse;
 import com.store.backend.variant.VariantEntity;
 import com.store.backend.variant.VariantRepository;
 import com.store.backend.variant.response.BaseVariantResponse;
+import com.store.backend.voucher.VoucherEntity;
+import com.store.backend.voucher.VoucherRepository;
+import com.store.backend.voucher.enums.VoucherType;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -44,6 +47,7 @@ public class GuestServiceImpl implements GuestService {
   private final VariantRepository variantRepository;
   private final OrderService orderService;
   private final OrderRepository orderRepository;
+  private final VoucherRepository voucherRepository;
 
   @Override
   @Transactional
@@ -152,6 +156,12 @@ public class GuestServiceImpl implements GuestService {
       throw new ConflictException("Giỏ hàng trống");
     }
 
+    VoucherEntity voucher = null;
+    if (request.getVoucher() != null) {
+      voucher = voucherRepository.findByCodeIgnoreCase(request.getVoucher())
+          .orElseThrow(() -> new NotFoundException("Không tìm thấy voucher"));
+    }
+
     String shippingAddress = orderService.mergeAddress(request.getAddress(), request.getCommune(),
         request.getDistrict(), request.getProvince());
     OrderEntity newOrder = OrderEntity.builder().guestOrder(true).fullName(request.getFullName())
@@ -164,8 +174,26 @@ public class GuestServiceImpl implements GuestService {
     int totalQuantity = orderItems.stream().mapToInt(OrderItemEntity::getQuantity).sum();
     BigDecimal totalPrice = orderItems.stream().map(OrderItemEntity::getTotalPrice).reduce(BigDecimal.ZERO,
         BigDecimal::add);
+    BigDecimal discount = BigDecimal.ZERO;
+    if (voucher != null) {
+      if (!voucher.isValid() || voucher.getType().equals(VoucherType.PRIVATE)) {
+        throw new ConflictException("Voucher không hợp lệ");
+      }
+      if ((voucher.getMinimumOrderAmount() == null)
+          || (voucher.getMinimumOrderAmount() != null && totalPrice.compareTo(voucher.getMinimumOrderAmount()) >= 0)) {
+        discount = voucher.getDiscountPercent() != null
+            ? totalPrice.multiply(BigDecimal.valueOf(voucher.getDiscountPercent())).divide(BigDecimal.valueOf(100))
+            : voucher.getDiscountAmount();
+        if (voucher.getMaximumDiscount() != null) {
+          discount = discount.compareTo(voucher.getMaximumDiscount()) <= 0 ? discount : voucher.getMaximumDiscount();
+        }
+      }
+    }
+
     newOrder.setTotalQuantity(totalQuantity);
     newOrder.setTotalPrice(totalPrice);
+    newOrder.setDiscount(discount);
+    newOrder.setTotalBill();
 
     OrderEntity savedOrder = orderRepository.save(newOrder);
     redisService.deleteObject(redisKey);

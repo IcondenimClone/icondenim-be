@@ -9,7 +9,6 @@ import com.store.backend.voucher.VoucherEntity;
 import com.store.backend.voucher.VoucherRepository;
 import com.store.backend.voucher.VoucherService;
 import com.store.backend.voucher.request.CreateVoucherRequest;
-import com.store.backend.voucher.response.VoucherResponse;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -20,8 +19,9 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class VoucherServiceImpl implements VoucherService {
   VoucherRepository voucherRepository;
+
   @Override
-  public void createVoucher(CreateVoucherRequest request) {
+  public VoucherEntity createVoucher(CreateVoucherRequest request) {
     if (request.getDiscountPercent() == null && request.getDiscountAmount() == null) {
       throw new BadRequestException("Yêu cầu nhập 1 trong 2 phương thức giảm giá");
     }
@@ -37,10 +37,18 @@ public class VoucherServiceImpl implements VoucherService {
       throw new BadRequestException("Ngày bắt đầu voucher phải từ hôm nay trở đi");
     }
 
-    VoucherEntity newVoucher = VoucherEntity.builder().code(request.getCode()).description(request.getDescription())
+    if (voucherRepository.existsByCodeIgnoreCase(request.getCode())) {
+      throw new BadRequestException("Code đã tồn tại");
+    }
+
+    VoucherEntity newVoucher = VoucherEntity.builder().code(request.getCode().toUpperCase())
+        .description(request.getDescription())
         .discountPercent(request.getDiscountPercent()).discountAmount(request.getDiscountAmount())
-        .minimumOrderAmount(request.getMinimumOrderAmount()).quantity(request.getQuantity())
-        .startAt(request.getStartAt()).endAt(request.getEndAt()).type(request.getType()).build();
-    voucherRepository.save(newVoucher);
+        .minimumOrderAmount(request.getMinimumOrderAmount()).maximumDiscount(request.getMaximumDiscount())
+        .quantity(request.getQuantity()).startAt(request.getStartAt()).endAt(request.getEndAt()).type(request.getType())
+        .build();
+    newVoucher.initUsed();
+    newVoucher.setStock();
+    return voucherRepository.save(newVoucher);
   }
 }

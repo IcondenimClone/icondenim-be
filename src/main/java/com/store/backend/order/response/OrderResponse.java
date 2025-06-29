@@ -16,6 +16,8 @@ public class OrderResponse {
   private String id;
   private int totalQuantity;
   private BigDecimal totalPrice;
+  private BigDecimal discount;
+  private BigDecimal totalBill;
   private OrderStatus status;
   private Set<BaseOrderItemResponse> items;
 }

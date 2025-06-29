@@ -49,6 +49,9 @@ public class VoucherEntity {
   private BigDecimal minimumOrderAmount;
 
   @Column
+  private BigDecimal maximumDiscount;
+
+  @Column
   private Integer quantity;
 
   @Column
@@ -71,16 +74,21 @@ public class VoucherEntity {
   @Column(nullable = false)
   private VoucherType type;
 
-  // public void setActive() {
-  //   LocalDate now = LocalDate.now();
-  //   if (this.stock != null && this.stock > 0 && now.isBefore(this.endAt)) {
-  //     this.active = true;
-  //   }
-  //   if 
-  // }
+  public void initUsed() {
+    if (this.quantity != null) {
+      this.used = 0;
+    }
+  }
+
+  public void setStock() {
+    if (this.quantity != null && this.used != null) {
+      this.stock = this.quantity - this.used;
+    }
+  }
 
   public boolean isValid() {
     LocalDate now = LocalDate.now();
-    return this.active && (this.stock > 0) && !now.isBefore(startAt) && !now.isAfter(endAt);
+    boolean validStock = (this.stock == null) || this.stock > 0;
+    return this.active && validStock && !now.isBefore(startAt) && !now.isAfter(endAt);
   }
 }
