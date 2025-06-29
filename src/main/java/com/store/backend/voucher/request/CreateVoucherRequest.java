@@ -9,6 +9,7 @@ import com.store.backend.voucher.enums.VoucherType;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.validation.constraints.Future;
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -29,6 +30,7 @@ public class CreateVoucherRequest {
   private String description;
 
   @Min(value = 1, message = "Chiết khấu phải lớn hơn 0%")
+  @Max(value = 100, message = "Chiết khấu không phá 100%")
   private Integer discountPercent;
 
   @Min(value = 1000, message = "Giảm giá lơn hơn hoặc bằng 1000₫")
@@ -36,6 +38,9 @@ public class CreateVoucherRequest {
 
   @Min(value = 1000, message = "Đơn hàng tối thiểu lớn hơn hoặc bằng 1000₫")
   private BigDecimal minimumOrderAmount;
+
+  @Min(value = 1000, message = "Giảm tối đa nhiều hơn hoặc bằng 1000₫")
+  private BigDecimal maximumDiscount;
 
   @Min(value = 1, message = "Số lượng voucher phải lơn hơn 0")
   private Integer quantity;

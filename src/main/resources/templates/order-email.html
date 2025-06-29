@@ -51,7 +51,7 @@
     <h2>Icondenim</h2>
     <h3 th:text="'Xin chào ' + ${order.fullName} + ','">Xin chào,</h3>
     <p>Bạn vừa đặt một đơn hàng tại Icondenim.</p>
-    <p><strong>Tổng tiền:</strong> <span th:text="${order.totalPrice} + '₫'"></span></p>
+    <p><strong>Tổng tiền:</strong> <span th:text="${order.totalBill} + '₫'"></span></p>
     <p><strong>Địa chỉ giao hàng:</strong> <span th:text="${order.shippingAddress}"></span></p>
 
     <h3>Chi tiết đơn hàng:</h3>

@@ -66,6 +66,13 @@ public class OrderEntity extends BaseEntity {
   @Column(nullable = false)
   private BigDecimal totalPrice;
 
+  @Column(nullable = false)
+  @Builder.Default
+  private BigDecimal discount = BigDecimal.ZERO;
+
+  @Column(nullable = false)
+  private BigDecimal totalBill;
+
   @Enumerated(EnumType.STRING)
   @Column(nullable = false, length = 20)
   @Builder.Default
@@ -89,4 +96,8 @@ public class OrderEntity extends BaseEntity {
   @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
   @Builder.Default
   private Set<OrderItemEntity> items = new HashSet<>();
+
+  public void setTotalBill() {
+    this.totalBill = this.totalPrice.subtract(this.discount);
+  }
 }

@@ -18,9 +18,10 @@ public class VoucherResponse {
   private String id;
   private String code;
   private String description;
-  private int discountPercent;
+  private Integer discountPercent;
   private BigDecimal discountAmount;
   private BigDecimal minimumOrderAmount;
+  private BigDecimal maximumDiscount;
   private int quantity;
   private int used;
   private int stock;

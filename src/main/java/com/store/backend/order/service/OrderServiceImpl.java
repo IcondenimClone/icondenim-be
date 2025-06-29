@@ -23,6 +23,8 @@ import com.store.backend.user.UserEntity;
 import com.store.backend.user.UserRepository;
 import com.store.backend.variant.VariantEntity;
 import com.store.backend.variant.VariantRepository;
+import com.store.backend.voucher.VoucherEntity;
+import com.store.backend.voucher.VoucherRepository;
 
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
@@ -39,12 +41,20 @@ public class OrderServiceImpl implements OrderService {
   CartRepository cartRepository;
   RedisService redisService;
   EmailService emailService;
+  VoucherRepository voucherRepository;
 
   @Override
   @Transactional
   public OrderEntity placeOrder(String userId, PlaceOrderRequest request) {
     UserEntity user = userRepository.findById(userId)
         .orElseThrow(() -> new NotFoundException("Không tìm thấy người dùng"));
+
+    VoucherEntity voucher = null;
+    if (request.getVoucher() != null) {
+      voucher = voucherRepository.findByCodeIgnoreCase(request.getVoucher())
+          .orElseThrow(() -> new NotFoundException("Không tìm thấy voucher"));
+    }
+
     CartEntity cart = user.getCart();
     if (cart == null || cart.getItems().isEmpty()) {
       throw new ConflictException("Giỏ hàng trống");
@@ -62,8 +72,35 @@ public class OrderServiceImpl implements OrderService {
 
     int totalQuantity = items.stream().mapToInt(OrderItemEntity::getQuantity).sum();
     BigDecimal totalPrice = items.stream().map(OrderItemEntity::getTotalPrice).reduce(BigDecimal.ZERO, BigDecimal::add);
+    BigDecimal discount = BigDecimal.ZERO;
+
+    if (voucher != null) {
+      System.out.println("voucher.getDiscountPercent() = " + voucher.getDiscountPercent());
+      System.out.println("voucher.getDiscountAmount() = " + voucher.getDiscountAmount());
+      System.out.println("voucher.getMaximumDiscount() = " + voucher.getMaximumDiscount());
+      if (!voucher.isValid()) {
+        throw new ConflictException("Voucher không hợp lệ");
+      }
+      if (voucher.getMinimumOrderAmount() == null
+          || (voucher.getMinimumOrderAmount() != null && totalPrice.compareTo(voucher.getMinimumOrderAmount()) >= 0)) {
+        discount = voucher.getDiscountPercent() != null
+            ? totalPrice.multiply(BigDecimal.valueOf(voucher.getDiscountPercent())).divide(BigDecimal.valueOf(100))
+            : voucher.getDiscountAmount();
+        if (voucher.getMaximumDiscount() != null) {
+          discount = discount.compareTo(voucher.getMaximumDiscount()) <= 0 ? discount : voucher.getMaximumDiscount();
+        }
+        if (voucher.getQuantity() != null) {
+          voucher.setUsed(voucher.getUsed() + 1);
+          voucher.setStock();
+          voucherRepository.save(voucher);
+        }
+      }
+    }
+
     newOrder.setTotalQuantity(totalQuantity);
     newOrder.setTotalPrice(totalPrice);
+    newOrder.setDiscount(discount);
+    newOrder.setTotalBill();
 
     cart.clearCart();
     cartRepository.save(cart);
@@ -77,7 +114,8 @@ public class OrderServiceImpl implements OrderService {
   public void confirmOrder(String token) {
     String redisKey = redisService.setKey(token, ":order:");
     String id = redisService.getString(redisKey);
-    OrderEntity order = orderRepository.findById(id).orElseThrow(() -> new NotFoundException("Không tìm thấy đơn hàng hoặc token không hợp lệ"));
+    OrderEntity order = orderRepository.findById(id)
+        .orElseThrow(() -> new NotFoundException("Không tìm thấy đơn hàng hoặc token không hợp lệ"));
     if (order.getStatus() != OrderStatus.WAITING) {
       throw new ConflictException("Đơn hàng đã được xử lý");
     }
