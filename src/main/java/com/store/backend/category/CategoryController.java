@@ -1,6 +1,7 @@
 package com.store.backend.category;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.http.HttpStatus;
@@ -28,11 +29,18 @@ import lombok.experimental.FieldDefaults;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/collections")
+@RequestMapping("/categories")
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class CategoryController {
   CategoryService categoryService;
   CategoryMapper categoryMapper;
+
+  @GetMapping("/all/tree")
+  public ResponseEntity<ApiResponse> getAllCategoryTrees() {
+    List<CategoryResponse> convertedCategories = categoryService.getAllCategoryTrees();
+    Map<String, Object> data = Map.of("categories", convertedCategories);
+    return ResponseEntity.ok(new ApiResponse("Lấy tất cả danh mục thành công", data));
+  }
 
   @PostMapping
   @PreAuthorize("hasRole('ROLE_ADMIN')")
@@ -60,7 +68,6 @@ public class CategoryController {
     Map<String, Object> data = createCategoryResponse(convertedCategory);
     return ResponseEntity.ok(new ApiResponse("Cập nhật danh mục sản phẩm thành công", data));
   }
-
 
   @DeleteMapping("/{id}")
   @PreAuthorize("hasRole('ROLE_ADMIN')")

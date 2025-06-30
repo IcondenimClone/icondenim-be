@@ -1,6 +1,7 @@
 package com.store.backend.product;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.http.HttpStatus;
@@ -13,12 +14,14 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.store.backend.common.ApiResponse;
 import com.store.backend.product.mapper.ProductMapper;
 import com.store.backend.product.request.CreateProductRequest;
 import com.store.backend.product.request.UpdateProductRequest;
+import com.store.backend.product.response.PagedResponse;
 import com.store.backend.product.response.ProductResponse;
 
 import jakarta.validation.Valid;
@@ -49,6 +52,14 @@ public class ProductController {
     ProductResponse convertedProduct = productMapper.entityToResponse(product);
     Map<String, Object> data = createProductResponse(convertedProduct);
     return ResponseEntity.ok(new ApiResponse("Lấy sản phẩm thành công", data));
+  }
+
+  @GetMapping("/all")
+  public ResponseEntity<ApiResponse> getAllProducts(@RequestParam(defaultValue = "0") int page,
+      @RequestParam(defaultValue = "10") int size) {
+    PagedResponse<ProductResponse> pagedProducts = productService.getAllProducts(page, size);
+    Map<String, Object> data = Map.of("pagedProducts", pagedProducts);
+    return ResponseEntity.ok(new ApiResponse("Lấy tất cả sản phẩm thành công", data));
   }
 
   @PatchMapping("/{id}")

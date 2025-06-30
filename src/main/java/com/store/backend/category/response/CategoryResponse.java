@@ -13,6 +13,5 @@ public class CategoryResponse {
   private String id;
   private String name;
   private String slug;
-  private Set<String> parentIds;
   private Set<BaseCategoryResponse> children;
 }

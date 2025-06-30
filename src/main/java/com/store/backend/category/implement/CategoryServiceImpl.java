@@ -2,7 +2,10 @@ package com.store.backend.category.implement;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.springframework.stereotype.Service;
@@ -10,8 +13,10 @@ import org.springframework.stereotype.Service;
 import com.store.backend.category.CategoryEntity;
 import com.store.backend.category.CategoryRepository;
 import com.store.backend.category.CategoryService;
+import com.store.backend.category.mapper.CategoryMapper;
 import com.store.backend.category.request.CreateCategoryRequest;
 import com.store.backend.category.request.UpdateCategoryRequest;
+import com.store.backend.category.response.CategoryResponse;
 import com.store.backend.common.SlugUtil;
 import com.store.backend.exception.AlreadyExistsException;
 import com.store.backend.exception.ConflictException;
@@ -28,6 +33,32 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class CategoryServiceImpl implements CategoryService {
   CategoryRepository categoryRepository;
+  CategoryMapper categoryMapper;
+
+  @Override
+  public List<CategoryResponse> getAllCategoryTrees() {
+    List<CategoryEntity> categories = categoryRepository.findAll();
+    Map<String, CategoryResponse> idToCategory = new HashMap<>();
+
+    for (CategoryEntity cat : categories) {
+      idToCategory.put(cat.getId(), categoryMapper.entityToResponse(cat));
+    }
+
+    for (CategoryEntity cat : categories) {
+      if (!cat.getParents().isEmpty()) {
+        for (CategoryEntity parent : cat.getParents()) {
+          CategoryResponse parentRes = idToCategory.get(parent.getId());
+          if (parentRes.getChildren() == null) {
+            parentRes.setChildren(new HashSet<>());
+          }
+          parentRes.getChildren().add(categoryMapper.entityToBaseResponse(cat));
+        }
+      }
+    }
+
+    return categories.stream().filter(cat -> cat.getParents().isEmpty()).map(cat -> idToCategory.get(cat.getId()))
+        .toList();
+  }
 
   @Override
   @Transactional
@@ -87,7 +118,7 @@ public class CategoryServiceImpl implements CategoryService {
   public void deleteCategory(String id) {
     if (!categoryRepository.existsById(id)) {
       throw new NotFoundException("Không tìm thấy danh mục sản phẩm");
-    } 
+    }
     categoryRepository.deleteById(id);
   }
 

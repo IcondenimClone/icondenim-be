@@ -2,8 +2,13 @@ package com.store.backend.product.implement;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Set;
 
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import com.store.backend.category.CategoryEntity;
@@ -15,8 +20,11 @@ import com.store.backend.exception.NotFoundException;
 import com.store.backend.product.ProductEntity;
 import com.store.backend.product.ProductRepository;
 import com.store.backend.product.ProductService;
+import com.store.backend.product.mapper.ProductMapper;
 import com.store.backend.product.request.CreateProductRequest;
 import com.store.backend.product.request.UpdateProductRequest;
+import com.store.backend.product.response.PagedResponse;
+import com.store.backend.product.response.ProductResponse;
 
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
@@ -29,6 +37,17 @@ import lombok.experimental.FieldDefaults;
 public class ProductServiceImpl implements ProductService {
   ProductRepository productRepository;
   CategoryRepository categoryRepository;
+  ProductMapper productMapper;
+
+  @Override
+  public PagedResponse<ProductResponse> getAllProducts(int page, int size) {
+    Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+    Page<ProductEntity> productPage = productRepository.findAll(pageable);
+    List<ProductResponse> productResponses = productPage.getContent().stream().map(productMapper::entityToResponse)
+        .toList();
+    return new PagedResponse<>(productResponses, productPage.getNumber(), productPage.getSize(),
+        productPage.getTotalElements(), productPage.getTotalPages(), productPage.isLast());
+  }
 
   @Override
   @Transactional
