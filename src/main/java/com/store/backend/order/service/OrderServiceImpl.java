@@ -127,7 +127,7 @@ public class OrderServiceImpl implements OrderService {
       throw new ConflictException("Đơn hàng đã được xử lý");
     }
 
-    order.setStatus(OrderStatus.CONFIRMED);
+    order.setStatus(OrderStatus.PENDING);
     orderRepository.save(order);
 
     redisService.deleteString(redisKey);

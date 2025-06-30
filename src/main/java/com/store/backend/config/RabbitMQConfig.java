@@ -12,13 +12,22 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class RabbitMQConfig {
-  public static final String QUEUE_NAME = "icondenim.email.queue";
+  public static final String AUTH_QUEUE = "icondenim.auth.queue";
+  public static final String ORDER_QUEUE = "icondenim.order.queue";
+
   public static final String EXCHANGE_NAME = "icondenim.email.exchange";
-  public static final String ROUTING_KEY = "icondenim-email-routing-key";
+
+  public static final String AUTH_ROUTING_KEY = "icondenim-auth-routing-key";
+  public static final String ORDER_ROUTING_KEY = "icondenim-order-routing-key";
 
   @Bean
-  public Queue queue() {
-    return new Queue(QUEUE_NAME, true);
+  public Queue authQueue() {
+    return new Queue(AUTH_QUEUE, true);
+  }
+
+  @Bean
+  public Queue orderQueue() {
+    return new Queue(ORDER_QUEUE, true);
   }
 
   @Bean
@@ -27,8 +36,13 @@ public class RabbitMQConfig {
   }
 
   @Bean
-  public Binding binding(Queue queue, TopicExchange exchange) {
-    return BindingBuilder.bind(queue).to(exchange).with(ROUTING_KEY);
+  public Binding bindingAuthQueue(Queue authQueue, TopicExchange exchange) {
+    return BindingBuilder.bind(authQueue).to(exchange).with(AUTH_ROUTING_KEY);
+  }
+
+  @Bean
+  public Binding bindingOrderQueue(Queue orderQueue, TopicExchange exchange) {
+    return BindingBuilder.bind(orderQueue).to(exchange).with(ORDER_ROUTING_KEY);
   }
 
   @Bean

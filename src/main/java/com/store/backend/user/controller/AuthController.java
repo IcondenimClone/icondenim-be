@@ -71,11 +71,19 @@ public class AuthController {
   }
 
   @PostMapping("/signup/verify")
-  public ResponseEntity<ApiResponse> verifySignUp(@Valid @RequestBody VerifySignUpRequest request,
+  public ResponseEntity<ApiResponse> verifySignUp(HttpServletRequest request,
+      @Valid @RequestBody VerifySignUpRequest cliRequest,
       HttpServletResponse response) {
-    UserEntity user = userService.verifySignUp(request);
+    UserEntity user = userService.verifySignUp(cliRequest);
     cartService.createDefaultCart(user.getId());
     setToken(user, response);
+
+    String guestToken = jwtService.extractTokenFromCookie(request, guestTokenName);
+    if (guestToken != null) {
+      String guestId = jwtService.extractGuestId(guestToken);
+      cartService.mergeGuestCartWithUserCart(user.getId(), guestId);
+      jwtService.clearTokenCookie(response, guestTokenName, "/");
+    }
 
     AuthResponse convertedUser = userMapper.entityToAuthResponse(user);
     Map<String, Object> data = createAuthResponse(convertedUser);
@@ -166,10 +174,17 @@ public class AuthController {
   }
 
   @PostMapping("/reset-password")
-  public ResponseEntity<ApiResponse> resetPassword(@Valid @RequestBody ResetPasswordRequest request,
+  public ResponseEntity<ApiResponse> resetPassword(HttpServletRequest request,
+      @Valid @RequestBody ResetPasswordRequest cliRequest,
       HttpServletResponse response) {
-    UserEntity user = userService.resetPassword(request);
+    UserEntity user = userService.resetPassword(cliRequest);
     setToken(user, response);
+    String guestToken = jwtService.extractTokenFromCookie(request, guestTokenName);
+    if (guestToken != null) {
+      String guestId = jwtService.extractGuestId(guestToken);
+      cartService.mergeGuestCartWithUserCart(user.getId(), guestId);
+      jwtService.clearTokenCookie(response, guestTokenName, "/");
+    }
 
     AuthResponse convertedUser = userMapper.entityToAuthResponse(user);
     Map<String, Object> data = createAuthResponse(convertedUser);

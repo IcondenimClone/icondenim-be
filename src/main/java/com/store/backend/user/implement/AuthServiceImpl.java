@@ -15,11 +15,12 @@ import com.store.backend.exception.AlreadyExistsException;
 import com.store.backend.exception.NotCorrectException;
 import com.store.backend.exception.NotFoundException;
 import com.store.backend.exception.TooManyException;
+import com.store.backend.rabbitmq.PublishMessage;
 import com.store.backend.redis.RedisService;
-import com.store.backend.smtp.EmailService;
 import com.store.backend.user.UserEntity;
 import com.store.backend.user.UserRepository;
 import com.store.backend.user.customs.CustomUserDetails;
+import com.store.backend.user.dto.AuthEmailDto;
 import com.store.backend.user.dto.ForgotPasswordDto;
 import com.store.backend.user.dto.RegistrationDto;
 import com.store.backend.user.enums.UserRole;
@@ -46,8 +47,8 @@ public class AuthServiceImpl implements AuthService {
   PasswordEncoder passwordEncoder;
   CartService cartService;
   AuthenticationManager authenticationManager;
-  EmailService emailService;
   RedisService redisService;
+  PublishMessage publishMessage;
 
   @Override
   public String signUp(SignUpRequest request) {
@@ -61,11 +62,10 @@ public class AuthServiceImpl implements AuthService {
     String otp = generateOtp();
     String registrationToken = generateUUID();
     String hashedPassword = passwordEncoder.encode(request.getPassword());
-
     RegistrationDto regData = RegistrationDto.builder().email(request.getEmail()).username(request.getUsername())
         .password(hashedPassword).otp(otp).attempts(0).build();
 
-    emailService.sendAuthEmail(request.getEmail(), "Xác nhận Đăng ký tài khoản tại Icondenim", otp);
+    sendEmail(request.getEmail(), "Xác nhận Đăng ký tài khoản tại Icondenim", otp);
 
     String redisKey = redisService.setKey(registrationToken, ":signup:");
     redisService.saveObject(redisKey, regData, 3, TimeUnit.MINUTES);
@@ -97,7 +97,7 @@ public class AuthServiceImpl implements AuthService {
 
     UserEntity user = UserEntity.builder().email(regData.getEmail()).username(regData.getUsername())
         .password(regData.getPassword()).role(UserRole.USER).build();
-    
+
     cartService.createDefaultCart(user.getId());
 
     redisService.deleteObject(redisKey);
@@ -127,7 +127,7 @@ public class AuthServiceImpl implements AuthService {
 
     ForgotPasswordDto forgData = ForgotPasswordDto.builder().email(request.getEmail()).otp(otp).attempts(0).build();
 
-    emailService.sendAuthEmail(request.getEmail(), "Xác nhận Quên mật khẩu tại Icondenim", otp);
+    sendEmail(request.getEmail(), "Xác nhận Quên mật khẩu tại Icondenim", otp);
 
     String redisKey = redisService.setKey(forgotPasswordToken, ":forgot-password:");
     redisService.saveObject(redisKey, forgData, 3, TimeUnit.MINUTES);
@@ -163,7 +163,7 @@ public class AuthServiceImpl implements AuthService {
     String redisKey = redisService.setKey(request.getResetPasswordToken(), ":reset-password:");
     String email = redisService.getString(redisKey);
     redisService.deleteString(redisKey);
-    
+
     UserEntity user = userRepository.findByEmail(email)
         .orElseThrow(() -> new NotFoundException("Không tìm thấy người dùng"));
     user.setPassword(passwordEncoder.encode(request.getNewPassword()));
@@ -185,10 +185,19 @@ public class AuthServiceImpl implements AuthService {
   @Transactional
   public UserEntity updateInfo(CustomUserDetails userDetails, UpdateInfoRequest request) {
     UserEntity user = getUserById(userDetails.getId());
-    if (request.getFirstName() != null) user.setFirstName(request.getFirstName());
-    if (request.getLastName() != null) user.setLastName(request.getLastName());
-    if (request.getDob() != null) user.setDob(request.getDob());
+    if (request.getFirstName() != null)
+      user.setFirstName(request.getFirstName());
+    if (request.getLastName() != null)
+      user.setLastName(request.getLastName());
+    if (request.getDob() != null)
+      user.setDob(request.getDob());
     return userRepository.save(user);
+  }
+
+  private void sendEmail(String to, String subject, String otp) {
+    AuthEmailDto message = AuthEmailDto.builder().to(to)
+        .subject(subject).otp(otp).build();
+    publishMessage.sendAuthEmail(message);
   }
 
   private String generateOtp() {
