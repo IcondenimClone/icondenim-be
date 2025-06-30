@@ -9,6 +9,8 @@ import java.util.concurrent.TimeUnit;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import com.store.backend.cart.request.AddItemToCartRequest;
 import com.store.backend.cart.request.UpdateItemInCartRequest;
@@ -197,7 +199,12 @@ public class GuestServiceImpl implements GuestService {
 
     OrderEntity savedOrder = orderRepository.save(newOrder);
     redisService.deleteObject(redisKey);
-    orderService.sendEmail(savedOrder, request.getEmail());
+    TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+      @Override
+      public void afterCommit() {
+        orderService.sendEmail(savedOrder, request.getEmail());
+      }
+    });
     return savedOrder;
   }
 

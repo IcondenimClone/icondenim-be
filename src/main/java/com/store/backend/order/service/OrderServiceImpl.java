@@ -7,18 +7,21 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import com.store.backend.cart.entity.CartEntity;
 import com.store.backend.cart.repository.CartRepository;
 import com.store.backend.exception.ConflictException;
 import com.store.backend.exception.NotFoundException;
+import com.store.backend.order.dto.OrderEmailDto;
 import com.store.backend.order.entity.OrderEntity;
 import com.store.backend.order.entity.OrderItemEntity;
 import com.store.backend.order.enums.OrderStatus;
 import com.store.backend.order.repository.OrderRepository;
 import com.store.backend.order.request.PlaceOrderRequest;
+import com.store.backend.rabbitmq.PublishMessage;
 import com.store.backend.redis.RedisService;
-import com.store.backend.smtp.EmailService;
 import com.store.backend.user.UserEntity;
 import com.store.backend.user.UserRepository;
 import com.store.backend.variant.VariantEntity;
@@ -35,12 +38,13 @@ import lombok.experimental.FieldDefaults;
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class OrderServiceImpl implements OrderService {
+
+  PublishMessage publishMessage;
   OrderRepository orderRepository;
   UserRepository userRepository;
   VariantRepository variantRepository;
   CartRepository cartRepository;
   RedisService redisService;
-  EmailService emailService;
   VoucherRepository voucherRepository;
 
   @Override
@@ -75,9 +79,6 @@ public class OrderServiceImpl implements OrderService {
     BigDecimal discount = BigDecimal.ZERO;
 
     if (voucher != null) {
-      System.out.println("voucher.getDiscountPercent() = " + voucher.getDiscountPercent());
-      System.out.println("voucher.getDiscountAmount() = " + voucher.getDiscountAmount());
-      System.out.println("voucher.getMaximumDiscount() = " + voucher.getMaximumDiscount());
       if (!voucher.isValid()) {
         throw new ConflictException("Voucher không hợp lệ");
       }
@@ -106,7 +107,13 @@ public class OrderServiceImpl implements OrderService {
     cartRepository.save(cart);
 
     OrderEntity savedOrder = orderRepository.save(newOrder);
-    sendEmail(savedOrder, user.getEmail());
+
+    TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+      @Override
+      public void afterCommit() {
+        sendEmail(savedOrder, user.getEmail());
+      }
+    });
     return savedOrder;
   }
 
@@ -131,7 +138,9 @@ public class OrderServiceImpl implements OrderService {
     String confirmToken = UUID.randomUUID().toString();
     String confirmLink = "http://localhost:2004/icondenim-be/orders/confirm?token=" + confirmToken;
 
-    emailService.sendOrderEmail(to, "Xác nhận Đơn đặt hàng tại Icondenim", savedOrder, confirmLink);
+    OrderEmailDto message = OrderEmailDto.builder().to(to).subject("Xác nhận Đơn đặt hàng tại Icondenim")
+        .orderId(savedOrder.getId()).confirmLink(confirmLink).build();
+    publishMessage.sendOrderEmail(message);
 
     String redisKey = redisService.setKey(confirmToken, ":order:");
     redisService.saveString(redisKey, savedOrder.getId(), 1, TimeUnit.DAYS);
