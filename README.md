@@ -71,7 +71,7 @@ backend/
 - Redis cache, RabbitMQ integration
 
 ## Environment Configuration
-- Create `src/main/resources/application.properties` to configure DB, Redis, SMTP, RabbitMQ etc based on `src/main/resources/application.properties`.
+- Create `src/main/resources/application.properties` to configure DB, Redis, SMTP, RabbitMQ etc based on `src/main/resources/application-sample.properties`.
 
 ## Contact
 - Email: tienhai2808@gmail.com
