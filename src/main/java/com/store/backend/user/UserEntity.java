@@ -2,11 +2,14 @@ package com.store.backend.user;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import com.store.backend.address.AddressEntity;
 import com.store.backend.cart.entity.CartEntity;
 import com.store.backend.common.BaseEntity;
+import com.store.backend.favorite.FavoriteEntity;
 import com.store.backend.user.enums.UserRole;
 
 import jakarta.persistence.CascadeType;
@@ -71,4 +74,8 @@ public class UserEntity extends BaseEntity {
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
   @Builder.Default
   private List<AddressEntity> addresses = new ArrayList<>();
+
+  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+  @Builder.Default
+  private Set<FavoriteEntity> favorites = new HashSet<>();
 }

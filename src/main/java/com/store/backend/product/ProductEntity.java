@@ -9,6 +9,7 @@ import java.util.Set;
 
 import com.store.backend.category.CategoryEntity;
 import com.store.backend.common.BaseEntity;
+import com.store.backend.favorite.FavoriteEntity;
 import com.store.backend.image.ImageEntity;
 import com.store.backend.variant.VariantEntity;
 
@@ -83,4 +84,8 @@ public class ProductEntity extends BaseEntity {
   @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
   @Builder.Default
   private Set<VariantEntity> variants = new HashSet<>();
+
+  @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+  @Builder.Default
+  private Set<FavoriteEntity> favorites = new HashSet<>();
 }
