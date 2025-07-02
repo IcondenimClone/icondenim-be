@@ -25,6 +25,7 @@ backend/
 │   ├── common/          # Common classes
 │   ├── config/          # Spring, Redis, Security config
 │   ├── exception/       # Exception handling
+│   ├── favorite/        # Favorite management
 │   ├── guest/           # Guest cart
 │   ├── image/           # Image management
 │   ├── order/           # Order management
@@ -64,6 +65,7 @@ backend/
 ## Main Features
 - User registration/login, JWT authentication
 - Product, category, variant, image management
+- Favorite management
 - Cart management (user & guest)
 - Order placement and management
 - Voucher and discount application
